@@ -29,8 +29,9 @@ export default async function Home({
   }
 
   const visibleTasks = filterTasksForViewer(tasks, viewer);
-  const visibleCalendarEvents = filterEventsForViewer(calendarEvents, viewer);
-  const visibleProjects = filterProjectsForViewer(projects, visibleTasks, visibleCalendarEvents, viewer);
+  const personalCalendarEvents = filterEventsForViewer(calendarEvents, viewer);
+  const visibleCalendarEvents = calendarEvents;
+  const visibleProjects = filterProjectsForViewer(projects, visibleTasks, personalCalendarEvents, viewer);
   const middleTasks = visibleTasks.filter((task) => task.task_level === TASK_LEVELS[0]);
   const openTasks = visibleTasks.filter((task) => task.status !== STATUSES[3]);
   const highPriority = visibleTasks.filter((task) => task.priority === PRIORITIES[2]);

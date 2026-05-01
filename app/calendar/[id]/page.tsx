@@ -29,10 +29,6 @@ export default async function CalendarEventDetailPage({
     notFound();
   }
 
-  if (!viewer.isAdmin && event.assignee_id !== viewer.employee?.id) {
-    redirect("/");
-  }
-
   const notice = getScheduleNotice(query?.schedule);
   const eventRange = event.end_date && event.end_date !== event.event_date ? `${event.event_date} - ${event.end_date}` : event.event_date;
   const timeLabel = event.is_all_day ? "終日" : [event.start_time?.slice(0, 5), event.end_time?.slice(0, 5)].filter(Boolean).join(" - ") || "時間未設定";

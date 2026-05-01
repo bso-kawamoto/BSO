@@ -32,8 +32,8 @@ export default async function CalendarPage({
   }
 
   const visibleTasks = viewer.isAdmin ? tasks : tasks.filter((task) => task.assignee_id === viewer.employee?.id);
-  const visibleCalendarEvents = viewer.isAdmin ? calendarEvents : calendarEvents.filter((event) => event.assignee_id === viewer.employee?.id);
-  const visibleProjects = filterProjectsForViewer(projects, visibleTasks, visibleCalendarEvents, viewer);
+  const visibleCalendarEvents = calendarEvents;
+  const visibleProjects = filterProjectsForViewer(projects, visibleTasks, viewer.isAdmin ? calendarEvents : [], viewer);
   const items = buildCalendarItems(visibleProjects, visibleTasks, visibleCalendarEvents);
   const baseDate = getBaseDate(params?.month, items);
   const days = buildMonthDays(baseDate);
