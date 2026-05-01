@@ -11,6 +11,8 @@ import {
   updateProjectDetails,
   updateProjectTask
 } from "@/app/actions";
+import { getCurrentViewer } from "@/lib/auth";
+import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import { CATEGORIES, PRIORITIES, STATUSES, TASK_LEVELS, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
 
@@ -26,6 +28,8 @@ export default async function ProjectDetailPage({
   const { id } = await params;
   const query = await searchParams;
   const [projects, tasks, calendarEvents, employees] = await Promise.all([getProjects(true), getTasks(), getCalendarEvents(), getEmployees()]);
+  const viewer = await getCurrentViewer(employees);
+  const employeeOptions = sortEmployeesForDisplay(employees, viewer?.employee?.id);
   const project = projects.find((item) => item.id === id);
 
   if (!project) {
@@ -177,7 +181,7 @@ export default async function ProjectDetailPage({
                   <div className="formGridTwo">
                     <div className="field">
                       <label htmlFor="detail-owner">担当者</label>
-                      <EmployeeSelect employees={employees} id="detail-owner" name="assignee_id" />
+                      <EmployeeSelect employees={employeeOptions} id="detail-owner" name="assignee_id" />
                     </div>
                     <div className="field">
                       <label htmlFor="detail-due">期日</label>
@@ -228,7 +232,7 @@ export default async function ProjectDetailPage({
                   <div className="formGridTwo">
                     <div className="field">
                       <label htmlFor="detail-calendar-owner">担当者</label>
-                      <EmployeeSelect employees={employees} id="detail-calendar-owner" name="calendar_assignee_id" />
+                      <EmployeeSelect employees={employeeOptions} id="detail-calendar-owner" name="calendar_assignee_id" />
                     </div>
                     <div className="field">
                       <label htmlFor="detail-location">場所</label>
@@ -257,7 +261,7 @@ export default async function ProjectDetailPage({
                   return (
                     <div className="detailTaskGroup" key={task.id}>
                       <DetailTaskCard
-                        employees={employees}
+                        employees={employeeOptions}
                         parentCandidates={middleTasks.filter((candidate) => candidate.id !== task.id)}
                         projectId={project.id}
                         task={task}
@@ -266,7 +270,7 @@ export default async function ProjectDetailPage({
                         <div className="childTasks">
                           {children.map((child) => (
                             <DetailTaskCard
-                              employees={employees}
+                              employees={employeeOptions}
                               key={child.id}
                               parentCandidates={middleTasks.filter((candidate) => candidate.id !== child.id)}
                               projectId={project.id}
@@ -289,7 +293,7 @@ export default async function ProjectDetailPage({
                 {projectEvents.length === 0 ? (
                   <div className="empty">関連予定なし</div>
                 ) : (
-                  projectEvents.map((event) => <EventItem employees={employees} event={event} key={event.id} projectId={project.id} />)
+                  projectEvents.map((event) => <EventItem employees={employeeOptions} event={event} key={event.id} projectId={project.id} />)
                 )}
               </div>
             </section>

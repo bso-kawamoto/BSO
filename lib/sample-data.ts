@@ -7,6 +7,7 @@ export const sampleEmployees: Employee[] = [
   "松本",
   "安藤",
   "平賀",
+  "宮田",
   "天木",
   "草間",
   "上野",

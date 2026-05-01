@@ -3,7 +3,7 @@ export const CATEGORIES = ["営業", "運用", "請求", "サポート", "管理
 export const PRIORITIES = ["低", "中", "高"] as const;
 export const MANAGERS = ["社長", "河本"] as const;
 export const TASK_LEVELS = ["中タスク", "小タスク"] as const;
-export const EMPLOYEE_NAMES = ["河本", "高橋", "大鋸", "松本", "安藤", "平賀", "天木", "草間", "上野", "大橋", "花里"] as const;
+export const EMPLOYEE_NAMES = ["河本", "高橋", "大鋸", "松本", "安藤", "草間", "上野", "平賀", "宮田", "天木", "花里", "大橋"] as const;
 
 export type TaskStatus = (typeof STATUSES)[number];
 export type TaskCategory = (typeof CATEGORIES)[number];

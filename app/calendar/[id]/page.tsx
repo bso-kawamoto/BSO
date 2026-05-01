@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { deleteCalendarEvent, logout, updateCalendarEvent } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
+import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { getCalendarEvents, getEmployees, getProjects } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +36,8 @@ export default async function CalendarEventDetailPage({
   const notice = getScheduleNotice(query?.schedule);
   const eventRange = event.end_date && event.end_date !== event.event_date ? `${event.event_date} - ${event.end_date}` : event.event_date;
   const timeLabel = event.is_all_day ? "終日" : [event.start_time?.slice(0, 5), event.end_time?.slice(0, 5)].filter(Boolean).join(" - ") || "時間未設定";
+
+  const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
 
   return (
     <main className="page">
@@ -118,7 +121,7 @@ export default async function CalendarEventDetailPage({
               <label htmlFor="calendar-owner">担当者</label>
               <select id="calendar-owner" name="calendar_assignee_id" defaultValue={event.assignee_id ?? ""}>
                 <option value="">未割当</option>
-                {employees.map((employee) => (
+                {employeeOptions.map((employee) => (
                   <option key={employee.id} value={employee.id}>
                     {employee.name}
                   </option>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { deleteTask, logout, updateTaskManagement } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
+import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
@@ -36,6 +37,7 @@ export default async function AdminPage({
 
   const manager = viewer.kind === "boss" ? MANAGERS[0] : MANAGERS[1];
   const notice = getAdminNotice(params?.updated, params?.deleted);
+  const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
 
   return (
     <main className="page">
@@ -69,7 +71,7 @@ export default async function AdminPage({
           <div className="adminList">
             {tasks.map((task) => (
               <AdminTaskRow
-                employees={employees}
+                employees={employeeOptions}
                 key={task.id}
                 manager={manager}
                 projects={projects}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createCalendarEvent, createProject, createTask, logout, updateTaskStatus } from "@/app/actions";
 import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
+import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
@@ -36,6 +37,7 @@ export default async function Home({
   const dueSoon = visibleTasks.filter((task) => task.due_date).slice(0, 4);
   const notice = getNotice(params?.created, params?.updated, params?.project, params?.schedule);
   const sortedProjects = sortProjects(visibleProjects, visibleTasks, params?.sort);
+  const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
 
   return (
     <main className="page">
@@ -147,7 +149,7 @@ export default async function Home({
               </div>
               <div className="field">
                 <label htmlFor="calendar-owner">担当者</label>
-                <EmployeeSelect id="calendar-owner" employees={employees} name="calendar_assignee_id" defaultValue={viewer.employee?.id ?? ""} />
+                <EmployeeSelect id="calendar-owner" employees={employeeOptions} name="calendar_assignee_id" defaultValue={viewer.employee?.id ?? ""} />
               </div>
               <div className="field">
                 <label htmlFor="location">場所</label>
@@ -211,7 +213,7 @@ export default async function Home({
               </div>
               <div className="field">
                 <label htmlFor="owner">担当者</label>
-                <EmployeeSelect id="owner" employees={employees} name="assignee_id" defaultValue={viewer.employee?.id ?? ""} />
+                <EmployeeSelect id="owner" employees={employeeOptions} name="assignee_id" defaultValue={viewer.employee?.id ?? ""} />
               </div>
               <div className="field">
                 <label htmlFor="due-date">期日</label>

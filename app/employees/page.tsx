@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logout } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
+import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
 import { getCalendarEvents, getEmployees, getTasks } from "@/lib/tasks";
 import { STATUSES, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
 
@@ -22,7 +23,7 @@ export default async function EmployeesPage({
 
   const cards = buildEmployeeCards(viewer.isAdmin ? employees : viewer.employee ? [viewer.employee] : [], tasks, events);
   const currentSort = params?.sort ?? "name";
-  const sortedCards = sortEmployeeCards(cards, currentSort);
+  const sortedCards = sortEmployeeCards(cards, currentSort, viewer.employee?.id);
 
   return (
     <main className="page">
@@ -151,25 +152,30 @@ function buildEmployeeCards(employees: Employee[], tasks: OperationTask[], event
   });
 }
 
-function sortEmployeeCards(cards: ReturnType<typeof buildEmployeeCards>, sort = "name") {
+function sortEmployeeCards(cards: ReturnType<typeof buildEmployeeCards>, sort = "name", currentEmployeeId?: string | null) {
   return [...cards].sort((a, b) => {
+    if (currentEmployeeId) {
+      if (a.employee.id === currentEmployeeId) return -1;
+      if (b.employee.id === currentEmployeeId) return 1;
+    }
+
     if (sort === "open") {
-      return b.openTasks.length - a.openTasks.length || a.employee.name.localeCompare(b.employee.name, "ja");
+      return b.openTasks.length - a.openTasks.length || compareEmployeesByCompanyOrder(a.employee, b.employee);
     }
 
     if (sort === "overdue") {
-      return b.overdue.length - a.overdue.length || a.employee.name.localeCompare(b.employee.name, "ja");
+      return b.overdue.length - a.overdue.length || compareEmployeesByCompanyOrder(a.employee, b.employee);
     }
 
     if (sort === "soon") {
-      return b.soon.length - a.soon.length || a.employee.name.localeCompare(b.employee.name, "ja");
+      return b.soon.length - a.soon.length || compareEmployeesByCompanyOrder(a.employee, b.employee);
     }
 
     if (sort === "events") {
-      return b.upcomingEvents.length - a.upcomingEvents.length || a.employee.name.localeCompare(b.employee.name, "ja");
+      return b.upcomingEvents.length - a.upcomingEvents.length || compareEmployeesByCompanyOrder(a.employee, b.employee);
     }
 
-    return a.employee.name.localeCompare(b.employee.name, "ja");
+    return compareEmployeesByCompanyOrder(a.employee, b.employee);
   });
 }
 

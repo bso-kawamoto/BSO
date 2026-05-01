@@ -30,6 +30,7 @@ const users = [
   { name: "松本", email: "matsumoto@bsobb.net", admin: false, aliases: ["松本", "譚ｾ譛ｬ"] },
   { name: "安藤", email: "ando@bsobb.net", admin: false, aliases: ["安藤", "螳芽陸"] },
   { name: "平賀", email: "hiraga@bsobb.net", admin: false, aliases: ["平賀", "蟷ｳ雉"] },
+  { name: "宮田", email: "miyata@bsobb.net", admin: false, aliases: ["宮田"] },
   { name: "天木", email: "amaki@bsobb.net", admin: false, aliases: ["天木", "螟ｩ譛ｨ"] },
   { name: "草間", email: "kusama@bsobb.net", admin: false, aliases: ["草間", "闕蛾俣"] },
   { name: "上野", email: "ueno@bsobb.net", admin: false, aliases: ["上野", "荳企㍽"] },

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
 import { sampleCalendarEvents, sampleEmployees, sampleProjects, sampleTasks } from "@/lib/sample-data";
 import type { CalendarEvent, Employee, OperationTask, Project } from "@/lib/types";
 
@@ -26,7 +27,7 @@ export async function getEmployees(): Promise<Employee[]> {
   const supabase = createClient();
 
   if (!supabase) {
-    return sampleEmployees;
+    return [...sampleEmployees].sort(compareEmployeesByCompanyOrder);
   }
 
   const { data, error } = await supabase
@@ -45,7 +46,7 @@ export async function getEmployees(): Promise<Employee[]> {
 
     if (legacyError) {
       console.error("Failed to fetch legacy employees:", legacyError.message);
-      return sampleEmployees;
+      return [...sampleEmployees].sort(compareEmployeesByCompanyOrder);
     }
 
     return (legacyData ?? []).map((employee) => ({
@@ -53,10 +54,10 @@ export async function getEmployees(): Promise<Employee[]> {
       email: null,
       auth_user_id: null,
       is_admin: employee.name === "河本" || employee.name === "豐ｳ譛ｬ"
-    }));
+    })).sort(compareEmployeesByCompanyOrder);
   }
 
-  return data ?? [];
+  return (data ?? []).sort(compareEmployeesByCompanyOrder);
 }
 
 export async function getProjects(includeArchived = false): Promise<Project[]> {
