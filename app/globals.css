@@ -649,9 +649,9 @@ a {
 
 .adminRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: flex-end;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  align-items: stretch;
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -660,9 +660,18 @@ a {
 
 .adminForm {
   display: grid;
-  grid-template-columns: minmax(220px, 1.3fr) repeat(8, minmax(120px, 1fr)) auto;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(150px, 1fr));
   gap: 10px;
   align-items: flex-end;
+}
+
+.adminForm .memoField {
+  grid-column: 1 / -2;
+}
+
+.adminSaveButton {
+  width: 100%;
+  min-width: 112px;
 }
 
 .calendarShell {
@@ -974,6 +983,19 @@ a {
 
 .deleteForm {
   display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.adminRow > .deleteForm {
+  margin-top: -50px;
+  padding-right: 0;
+  pointer-events: none;
+}
+
+.adminRow > .deleteForm .dangerButton {
+  min-width: 112px;
+  pointer-events: auto;
 }
 
 .projectDetailShell {
@@ -1322,6 +1344,15 @@ a {
 
   .deleteForm {
     display: grid;
+  }
+
+  .adminForm .memoField,
+  .adminSaveButton {
+    grid-column: 1;
+  }
+
+  .adminRow > .deleteForm {
+    margin-top: 0;
   }
 }
 

@@ -183,7 +183,7 @@ function AdminTaskRow({
           <label htmlFor={`memo-${task.id}`}>進捗メモ</label>
           <textarea id={`memo-${task.id}`} name="memo" defaultValue={task.memo ?? ""} rows={2} maxLength={1000} />
         </div>
-        <button className="smallButton" type="submit">
+        <button className="smallButton adminSaveButton" type="submit">
           保存
         </button>
       </form>
