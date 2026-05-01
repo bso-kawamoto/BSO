@@ -988,14 +988,12 @@ a {
 }
 
 .adminRow > .deleteForm {
-  margin-top: -50px;
+  margin-top: 0;
   padding-right: 0;
-  pointer-events: none;
 }
 
 .adminRow > .deleteForm .dangerButton {
   min-width: 112px;
-  pointer-events: auto;
 }
 
 .projectDetailShell {
