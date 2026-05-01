@@ -224,6 +224,10 @@ a {
   grid-column: span 1;
 }
 
+.quickPanel .formGridTwo {
+  grid-template-columns: 1fr;
+}
+
 .panel h2,
 .section h2 {
   margin: 0 0 16px;
@@ -285,6 +289,7 @@ a {
 .field {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 
 .field label {
@@ -297,6 +302,7 @@ a {
 .field select,
 .field textarea {
   width: 100%;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 7px;
   padding: 11px 12px;
