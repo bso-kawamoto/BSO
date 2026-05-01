@@ -86,7 +86,7 @@ export default async function Home({
             </div>
           </div>
 
-          <aside className="panel" aria-label="Quick create task and project">
+          <aside className="panel quickPanel" aria-label="Quick create task and project">
             <h2>クイック登録</h2>
             {notice ? <p className={`notice ${notice.kind}`}>{notice.message}</p> : null}
             {viewer.isAdmin ? (
