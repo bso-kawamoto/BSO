@@ -92,21 +92,19 @@ export default async function Home({
           <aside className="panel quickPanel" aria-label="Quick create task and project">
             <h2>クイック登録</h2>
             {notice ? <p className={`notice ${notice.kind}`}>{notice.message}</p> : null}
-            {viewer.isAdmin ? (
-              <form action={createProject} className="quickForm projectQuickForm">
-                <div className="field">
-                  <label htmlFor="project-name">案件名</label>
-                  <input id="project-name" name="name" maxLength={120} placeholder="例: お伊勢さん杯" required />
-                </div>
-                <div className="field">
-                  <label htmlFor="project-due">案件期日</label>
-                  <input id="project-due" name="due_date" type="date" />
-                </div>
-                <button className="secondaryButton" type="submit">
-                  案件を追加
-                </button>
-              </form>
-            ) : null}
+            <form action={createProject} className="quickForm projectQuickForm">
+              <div className="field">
+                <label htmlFor="project-name">案件名</label>
+                <input id="project-name" name="name" maxLength={120} placeholder="例: お伊勢さん杯" required />
+              </div>
+              <div className="field">
+                <label htmlFor="project-due">案件期日</label>
+                <input id="project-due" name="due_date" type="date" />
+              </div>
+              <button className="secondaryButton" type="submit">
+                案件を追加
+              </button>
+            </form>
 
             <form action={createCalendarEvent} className="quickForm projectQuickForm">
               <div className="field">
