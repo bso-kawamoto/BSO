@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import {
   archiveProject,
   createProjectCalendarEvent,
@@ -13,6 +13,7 @@ import {
 } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
+import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import { CATEGORIES, PRIORITIES, STATUSES, TASK_LEVELS, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
 
@@ -29,14 +30,20 @@ export default async function ProjectDetailPage({
   const query = await searchParams;
   const [projects, tasks, calendarEvents, employees] = await Promise.all([getProjects(true), getTasks(), getCalendarEvents(), getEmployees()]);
   const viewer = await getCurrentViewer(employees);
-  const employeeOptions = sortEmployeesForDisplay(employees, viewer?.employee?.id);
+
+  if (!viewer) {
+    redirect(`/login?next=/projects/${id}`);
+  }
+
+  const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
   const project = projects.find((item) => item.id === id);
 
   if (!project) {
     notFound();
   }
 
-  const projectTasks = tasks.filter((task) => task.project_id === project.id);
+  const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
+  const projectTasks = visibleTasks.filter((task) => task.project_id === project.id);
   const projectEvents = calendarEvents.filter((event) => event.project_id === project.id);
   const completedTasks = projectTasks.filter((task) => task.status === "完了");
   const overdueTasks = projectTasks.filter((task) => getDueState(task.due_date) === "overdue");

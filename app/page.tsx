@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createCalendarEvent, createProject, createTask, logout, updateTaskStatus } from "@/app/actions";
 import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
+import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
@@ -28,7 +29,7 @@ export default async function Home({
     redirect("/login?next=/");
   }
 
-  const visibleTasks = filterTasksForViewer(tasks, viewer);
+  const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
   const personalCalendarEvents = filterEventsForViewer(calendarEvents, viewer);
   const visibleCalendarEvents = calendarEvents;
   const visibleProjects = filterProjectsForViewer(projects, visibleTasks, personalCalendarEvents, viewer);
@@ -271,14 +272,6 @@ export default async function Home({
       </div>
     </main>
   );
-}
-
-function filterTasksForViewer(tasks: OperationTask[], viewer: CurrentViewer) {
-  if (viewer.isAdmin) {
-    return tasks;
-  }
-
-  return tasks.filter((task) => task.assignee_id === viewer.employee?.id);
 }
 
 function filterEventsForViewer(events: CalendarEvent[], viewer: CurrentViewer) {

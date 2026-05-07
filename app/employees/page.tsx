@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { logout } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
 import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
+import { filterEmployeesForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getTasks } from "@/lib/tasks";
 import { STATUSES, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
 
@@ -21,7 +22,7 @@ export default async function EmployeesPage({
     redirect("/login?next=/employees");
   }
 
-  const cards = buildEmployeeCards(viewer.isAdmin ? employees : viewer.employee ? [viewer.employee] : [], tasks, events);
+  const cards = buildEmployeeCards(filterEmployeesForViewer(employees, viewer), tasks, events);
   const currentSort = params?.sort ?? "name";
   const sortedCards = sortEmployeeCards(cards, currentSort, viewer.employee?.id);
 

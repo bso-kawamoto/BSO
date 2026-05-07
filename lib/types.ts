@@ -1,5 +1,5 @@
 export const STATUSES = ["未着手", "進行中", "確認待ち", "完了"] as const;
-export const CATEGORIES = ["営業", "運用", "請求", "サポート", "管理"] as const;
+export const CATEGORIES = ["営業", "運用", "請求", "サポート", "管理", "物販"] as const;
 export const PRIORITIES = ["低", "中", "高"] as const;
 export const MANAGERS = ["社長", "河本"] as const;
 export const TASK_LEVELS = ["中タスク", "小タスク"] as const;

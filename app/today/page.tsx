@@ -1,16 +1,26 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { getCalendarEvents, getProjects, getTasks } from "@/lib/tasks";
+import { getCurrentViewer } from "@/lib/auth";
+import { filterTasksForViewer } from "@/lib/task-visibility";
+import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
 
 export default async function TodayPage() {
-  const [events, projects, tasks] = await Promise.all([getCalendarEvents(), getProjects(true), getTasks()]);
+  const [events, employees, projects, tasks] = await Promise.all([getCalendarEvents(), getEmployees(), getProjects(true), getTasks()]);
+  const viewer = await getCurrentViewer(employees);
+
+  if (!viewer) {
+    redirect("/login?next=/today");
+  }
+
+  const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
   const todayKey = formatDateKey(new Date());
   const todayEvents = events.filter((event) => isDateWithin(todayKey, event.event_date, event.end_date ?? event.event_date));
-  const overdueTasks = tasks.filter((task) => task.status !== "完了" && getDiffDays(task.due_date) < 0);
-  const todayTasks = tasks.filter((task) => task.status !== "完了" && getDiffDays(task.due_date) === 0);
-  const soonTasks = tasks.filter((task) => {
+  const overdueTasks = visibleTasks.filter((task) => task.status !== "完了" && getDiffDays(task.due_date) < 0);
+  const todayTasks = visibleTasks.filter((task) => task.status !== "完了" && getDiffDays(task.due_date) === 0);
+  const soonTasks = visibleTasks.filter((task) => {
     const diff = getDiffDays(task.due_date);
     return task.status !== "完了" && diff > 0 && diff <= 3;
   });

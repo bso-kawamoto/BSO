@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logout } from "@/app/actions";
 import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
+import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import { STATUSES, type CalendarEvent, type OperationTask, type Project } from "@/lib/types";
 
@@ -31,7 +32,7 @@ export default async function CalendarPage({
     redirect("/login?next=/calendar");
   }
 
-  const visibleTasks = viewer.isAdmin ? tasks : tasks.filter((task) => task.assignee_id === viewer.employee?.id);
+  const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
   const visibleCalendarEvents = calendarEvents;
   const visibleProjects = filterProjectsForViewer(projects, visibleTasks, viewer.isAdmin ? calendarEvents : [], viewer);
   const items = buildCalendarItems(visibleProjects, visibleTasks, visibleCalendarEvents);
