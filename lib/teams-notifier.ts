@@ -34,6 +34,54 @@ export async function sendTeamsDueAlerts(tasks: OperationTask[], projects: Proje
   return { ok: true as const, reason: "sent" as const, count: alertTasks.length };
 }
 
+export async function sendTeamsTaskAssignedAlert(task: {
+  assigneeName: string | null;
+  category: string;
+  dueDate: string | null;
+  projectName: string | null;
+  taskLevel: string;
+  title: string;
+}) {
+  const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
+
+  if (!webhookUrl || !task.assigneeName) {
+    return { ok: false as const, reason: webhookUrl ? "missing-assignee" : "missing-webhook" };
+  }
+
+  const response = await fetch(webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      "@type": "MessageCard",
+      "@context": "https://schema.org/extensions",
+      summary: "BSO Operation 新規担当タスク",
+      themeColor: "0B2D5C",
+      title: "新しい担当タスクが追加されました",
+      sections: [
+        {
+          facts: [
+            { name: "担当者", value: task.assigneeName },
+            { name: "タスク", value: task.title },
+            { name: "案件", value: task.projectName ?? "案件なし" },
+            { name: "階層", value: task.taskLevel },
+            { name: "カテゴリ", value: task.category },
+            { name: "期日", value: task.dueDate ?? "未設定" }
+          ]
+        }
+      ]
+    })
+  });
+
+  if (!response.ok) {
+    console.error("Failed to send Teams task assignment:", response.status, await response.text().catch(() => ""));
+    return { ok: false as const, reason: "send-failed" as const };
+  }
+
+  return { ok: true as const, reason: "sent" as const };
+}
+
 function buildDueAlertTasks(tasks: OperationTask[], projects: Project[]): DueAlertTask[] {
   const projectById = new Map(projects.map((project) => [project.id, project.name]));
 

@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AUTH_ACCESS_COOKIE, AUTH_REFRESH_COOKIE } from "@/lib/auth";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
-import { sendTeamsDueAlerts } from "@/lib/teams-notifier";
+import { sendTeamsDueAlerts, sendTeamsTaskAssignedAlert } from "@/lib/teams-notifier";
 import { getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
@@ -234,6 +234,15 @@ export async function createTask(formData: FormData) {
     redirect("/?created=error");
   }
 
+  await notifyTaskAssigned({
+    assigneeName,
+    category,
+    dueDate,
+    projectId,
+    taskLevel,
+    title
+  });
+
   revalidatePath("/");
   revalidatePath("/admin");
   redirect("/?created=success");
@@ -281,6 +290,15 @@ export async function createProjectTask(formData: FormData) {
     console.error("Failed to create project task:", error.message);
     redirect(`/projects/${projectId}?created=error`);
   }
+
+  await notifyTaskAssigned({
+    assigneeName,
+    category,
+    dueDate,
+    projectId,
+    taskLevel,
+    title
+  });
 
   revalidatePath("/");
   revalidatePath("/admin");
@@ -888,6 +906,40 @@ function revalidateProjectViews(projectId: string) {
   revalidatePath(`/projects/${projectId}`);
 }
 
+async function notifyTaskAssigned({
+  assigneeName,
+  category,
+  dueDate,
+  projectId,
+  taskLevel,
+  title
+}: {
+  assigneeName: string | null;
+  category: TaskCategory;
+  dueDate: string | null;
+  projectId: string | null;
+  taskLevel: TaskLevel;
+  title: string;
+}) {
+  if (!assigneeName) {
+    return;
+  }
+
+  const projectName = projectId ? await getProjectName(projectId) : null;
+  const result = await sendTeamsTaskAssignedAlert({
+    assigneeName,
+    category,
+    dueDate,
+    projectName,
+    taskLevel,
+    title
+  });
+
+  if (!result.ok && result.reason !== "missing-webhook") {
+    console.error("Teams task assignment notification failed:", result.reason);
+  }
+}
+
 function readNullableUuid(formData: FormData, key: string) {
   const value = formData.get(key);
 
@@ -898,6 +950,23 @@ function readNullableUuid(formData: FormData, key: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
     ? value
     : null;
+}
+
+async function getProjectName(projectId: string) {
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.from("projects").select("name").eq("id", projectId).single();
+
+  if (error) {
+    console.error("Failed to fetch project:", error.message);
+    return null;
+  }
+
+  return data.name;
 }
 
 async function getAssigneeName(assigneeId: string | null) {
