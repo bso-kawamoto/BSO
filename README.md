@@ -72,6 +72,7 @@ SUPABASE_SERVICE_ROLE_KEY=
 APP_ADMIN_EMAILS=
 TEAMS_WEBHOOK_URL=
 AUTH_INITIAL_PASSWORD=
+CRON_SECRET=
 ```
 
 ## 開発起動方法
@@ -135,7 +136,11 @@ node scripts/create-auth-users.mjs
 
 ## Teams通知予定
 
-期限アラートは次の拡張で `TEAMS_WEBHOOK_URL` を使って送信する想定です。対象は期限切れ、今日期限、3日以内のタスクです。
+期限アラートは `TEAMS_WEBHOOK_URL` を使って送信します。対象は期限切れ、今日期限、3日以内の未完了タスクです。
+
+- 管理画面の「Teamsに期限アラート送信」から手動送信できます。
+- 自動送信用APIは `/api/teams/due-alerts` です。
+- `CRON_SECRET` を設定した場合は、`Authorization: Bearer <CRON_SECRET>` が必要です。
 
 ## 今後の拡張予定
 

@@ -5,6 +5,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AUTH_ACCESS_COOKIE, AUTH_REFRESH_COOKIE } from "@/lib/auth";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { sendTeamsDueAlerts } from "@/lib/teams-notifier";
+import { getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
   MANAGERS,
@@ -66,6 +68,17 @@ export async function logout() {
   cookieStore.delete(AUTH_ACCESS_COOKIE);
   cookieStore.delete(AUTH_REFRESH_COOKIE);
   redirect("/login");
+}
+
+export async function sendTeamsDueAlert() {
+  const [tasks, projects] = await Promise.all([getTasks(), getProjects(true)]);
+  const result = await sendTeamsDueAlerts(tasks, projects);
+
+  if (!result.ok) {
+    redirect(`/admin?teams=${result.reason}`);
+  }
+
+  redirect(`/admin?teams=${result.reason}&count=${result.count}`);
 }
 
 export async function createProject(formData: FormData) {

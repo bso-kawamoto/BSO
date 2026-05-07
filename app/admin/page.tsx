@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { deleteTask, logout, updateTaskManagement } from "@/app/actions";
+import { deleteTask, logout, sendTeamsDueAlert, updateTaskManagement } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { getEmployees, getProjects, getTasks } from "@/lib/tasks";
@@ -19,7 +19,7 @@ import {
 export default async function AdminPage({
   searchParams
 }: {
-  searchParams?: Promise<{ updated?: string; deleted?: string }>;
+  searchParams?: Promise<{ count?: string; deleted?: string; teams?: string; updated?: string }>;
 }) {
   const params = await searchParams;
   const tasks = await getTasks();
@@ -36,7 +36,7 @@ export default async function AdminPage({
   }
 
   const manager = viewer.kind === "boss" ? MANAGERS[0] : MANAGERS[1];
-  const notice = getAdminNotice(params?.updated, params?.deleted);
+  const notice = getAdminNotice(params?.updated, params?.deleted, params?.teams, params?.count);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
 
   return (
@@ -66,6 +66,11 @@ export default async function AdminPage({
               <h1 className="adminTitle">タスク管理</h1>
               <p className="mutedText">社長と河本だけが開ける管理画面です。担当者、状態、カテゴリ、優先度、期限をまとめて更新できます。</p>
             </div>
+            <form action={sendTeamsDueAlert}>
+              <button className="secondaryButton" type="submit">
+                Teamsに期限アラート送信
+              </button>
+            </form>
           </div>
           {notice ? <p className={`notice ${notice.kind}`}>{notice.message}</p> : null}
           <div className="adminList">
@@ -198,7 +203,23 @@ function AdminTaskRow({
   );
 }
 
-function getAdminNotice(updated?: string, deleted?: string) {
+function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string) {
+  if (teams === "sent") {
+    return { kind: "noticeSuccess", message: `Teamsへ期限アラートを送信しました。対象 ${count ?? "0"} 件。` };
+  }
+
+  if (teams === "no-targets") {
+    return { kind: "noticeSuccess", message: "Teams通知対象の期限タスクはありません。" };
+  }
+
+  if (teams === "missing-webhook") {
+    return { kind: "noticeError", message: "TEAMS_WEBHOOK_URL が未設定です。Vercelの環境変数を確認してください。" };
+  }
+
+  if (teams === "send-failed") {
+    return { kind: "noticeError", message: "Teams通知の送信に失敗しました。Webhook URLを確認してください。" };
+  }
+
   if (updated === "success") {
     return { kind: "noticeSuccess", message: "タスクを更新しました。" };
   }
