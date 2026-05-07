@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createCalendarEvent, createProject, createTask, logout, updateTaskStatus } from "@/app/actions";
+import { createCalendarEvent, createProject, createTask, logout, updateTaskDetails, updateTaskStatus } from "@/app/actions";
 import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
@@ -263,9 +263,11 @@ export default async function Home({
           </div>
           <div className="projectBoard">
             {sortedProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} tasks={visibleTasks.filter((task) => task.project_id === project.id)} />
+              <ProjectCard employees={employeeOptions} key={project.id} project={project} tasks={visibleTasks.filter((task) => task.project_id === project.id)} />
             ))}
-            {visibleTasks.some((task) => !task.project_id) ? <ProjectCard project={null} tasks={visibleTasks.filter((task) => !task.project_id)} /> : null}
+            {visibleTasks.some((task) => !task.project_id) ? (
+              <ProjectCard employees={employeeOptions} project={null} tasks={visibleTasks.filter((task) => !task.project_id)} />
+            ) : null}
             {visibleProjects.length === 0 && visibleTasks.length === 0 ? <div className="empty">表示できる案件・タスクがありません</div> : null}
           </div>
         </section>
@@ -555,7 +557,7 @@ function Summary({ label, value }: { label: string; value: number }) {
   );
 }
 
-function TaskCard({ task }: { task: OperationTask }) {
+function TaskCard({ employees, task }: { employees: Employee[]; task: OperationTask }) {
   const priorityClass = task.priority === PRIORITIES[2] ? "priorityHigh" : task.priority === PRIORITIES[1] ? "priorityMedium" : "priorityLow";
 
   return (
@@ -582,11 +584,67 @@ function TaskCard({ task }: { task: OperationTask }) {
           更新
         </button>
       </form>
+      <details className="taskEditDetails">
+        <summary>内容を修正</summary>
+        <form action={updateTaskDetails} className="boardTaskEditForm">
+          <input type="hidden" name="id" value={task.id} />
+          <div className="field wideField">
+            <label htmlFor={`board-task-title-${task.id}`}>タスク名</label>
+            <input id={`board-task-title-${task.id}`} name="title" defaultValue={task.title} maxLength={120} required />
+          </div>
+          <div className="field">
+            <label htmlFor={`board-task-category-${task.id}`}>カテゴリ</label>
+            <select id={`board-task-category-${task.id}`} name="category" defaultValue={task.category}>
+              {CATEGORIES.map((category) => (
+                <option key={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`board-task-status-${task.id}`}>状態</label>
+            <select id={`board-task-status-${task.id}`} name="status" defaultValue={task.status}>
+              {STATUSES.map((status) => (
+                <option key={status}>{status}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`board-task-priority-${task.id}`}>優先度</label>
+            <select id={`board-task-priority-${task.id}`} name="priority" defaultValue={task.priority}>
+              {PRIORITIES.map((priority) => (
+                <option key={priority}>{priority}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`board-task-owner-${task.id}`}>担当</label>
+            <select id={`board-task-owner-${task.id}`} name="assignee_id" defaultValue={task.assignee_id ?? ""}>
+              <option value="">未割当</option>
+              {employees.map((employee) => (
+                <option key={employee.id} value={employee.id}>
+                  {employee.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`board-task-due-${task.id}`}>期日</label>
+            <input id={`board-task-due-${task.id}`} name="due_date" type="date" defaultValue={task.due_date ?? ""} />
+          </div>
+          <div className="field memoField">
+            <label htmlFor={`board-task-memo-${task.id}`}>進捗メモ</label>
+            <textarea id={`board-task-memo-${task.id}`} name="memo" defaultValue={task.memo ?? ""} rows={2} maxLength={1000} />
+          </div>
+          <button className="smallButton" type="submit">
+            保存
+          </button>
+        </form>
+      </details>
     </article>
   );
 }
 
-function ProjectCard({ project, tasks }: { project: Project | null; tasks: OperationTask[] }) {
+function ProjectCard({ employees, project, tasks }: { employees: Employee[]; project: Project | null; tasks: OperationTask[] }) {
   const middleTasks = tasks.filter((task) => task.task_level === TASK_LEVELS[0] || !task.parent_task_id);
   const childTasks = tasks.filter((task) => task.task_level === TASK_LEVELS[1] && task.parent_task_id);
   const completeCount = tasks.filter((task) => task.status === STATUSES[3]).length;
@@ -618,10 +676,10 @@ function ProjectCard({ project, tasks }: { project: Project | null; tasks: Opera
 
             return (
               <div className="taskGroup" key={task.id}>
-                <TaskCard task={task} />
+                <TaskCard employees={employees} task={task} />
                 <div className="childTasks">
                   {children.map((child) => (
-                    <TaskCard key={child.id} task={child} />
+                    <TaskCard employees={employees} key={child.id} task={child} />
                   ))}
                 </div>
               </div>

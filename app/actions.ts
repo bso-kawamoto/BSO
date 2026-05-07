@@ -477,6 +477,54 @@ export async function updateTaskStatus(formData: FormData) {
   redirect("/?updated=success");
 }
 
+export async function updateTaskDetails(formData: FormData) {
+  const id = readText(formData, "id");
+  const title = readText(formData, "title");
+  const category = readCategory(formData);
+  const status = readStatus(formData);
+  const priority = readPriority(formData);
+  const dueDate = readOptionalDate(formData);
+  const assigneeId = readNullableUuid(formData, "assignee_id");
+  const memo = readLongText(formData, "memo");
+
+  if (!id || !title || !category || !status || !priority) {
+    redirect("/?updated=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect("/?updated=missing-env");
+  }
+
+  const assigneeName = await getAssigneeName(assigneeId);
+
+  const { error } = await supabase
+    .from("operation_tasks")
+    .update({
+      title,
+      owner: assigneeName ?? "未割当",
+      assignee_id: assigneeId,
+      category,
+      status,
+      priority,
+      memo,
+      due_date: dueDate
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Failed to update task details:", error.message);
+    redirect("/?updated=error");
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/employees");
+  revalidatePath("/today");
+  redirect("/?updated=success");
+}
+
 export async function updateTaskManagement(formData: FormData) {
   const manager = readManager(formData);
   const id = readText(formData, "id");

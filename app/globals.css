@@ -543,6 +543,32 @@ a {
   color: var(--text);
 }
 
+.taskEditDetails {
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.taskEditDetails summary {
+  width: fit-content;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.boardTaskEditForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+  align-items: flex-end;
+}
+
+.boardTaskEditForm .wideField,
+.boardTaskEditForm .memoField {
+  grid-column: 1 / -1;
+}
+
 .tag {
   padding: 4px 7px;
   border-radius: 6px;
@@ -1351,7 +1377,9 @@ a {
   }
 
   .adminForm .memoField,
-  .adminSaveButton {
+  .adminSaveButton,
+  .boardTaskEditForm .wideField,
+  .boardTaskEditForm .memoField {
     grid-column: 1;
   }
 
@@ -1376,6 +1404,7 @@ a {
   .employeeStats,
   .managerGrid,
   .calendarStats,
+  .boardTaskEditForm,
   .formGridTwo {
     grid-template-columns: 1fr;
   }
