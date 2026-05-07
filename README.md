@@ -140,7 +140,7 @@ node scripts/create-auth-users.mjs
 
 - 管理画面の「Teamsに期限アラート送信」から手動送信できます。
 - 自動送信用APIは `/api/teams/due-alerts` です。
-- `vercel.json` で毎朝8:30（日本時間）に自動送信します。
+- `vercel.json` で毎朝9:45（日本時間）に自動送信します。
 - `CRON_SECRET` を設定した場合は、`Authorization: Bearer <CRON_SECRET>` が必要です。
 - 担当者付きのタスクが追加された場合もTeamsへ通知します。
 
