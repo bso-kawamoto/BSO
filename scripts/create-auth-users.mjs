@@ -35,7 +35,7 @@ const users = [
   { name: "草間", email: "kusama@bsobb.net", admin: false, aliases: ["草間", "闕蛾俣"] },
   { name: "上野", email: "ueno@bsobb.net", admin: false, aliases: ["上野", "荳企㍽"] },
   { name: "大橋", email: "ohashi@bsobb.net", admin: false, aliases: ["大橋", "螟ｧ讖・"] },
-  { name: "花里", email: "hanazato@bsobb.net", admin: false, aliases: ["花里", "闃ｱ驥・"] }
+  { name: "花里", email: "hanasato@bsobb.net", admin: false, aliases: ["花里", "闃ｱ驥・"] }
 ];
 
 const employees = await fetchEmployees();

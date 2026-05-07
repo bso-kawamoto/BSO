@@ -2,8 +2,8 @@ import type { CurrentViewer } from "@/lib/auth";
 import type { Employee, OperationTask } from "@/lib/types";
 
 const MERCHANDISE_CATEGORY = "物販";
-const MERCHANDISE_TEAM_NAMES = ["安藤", "宮田", "天木", "花里", "大橋"];
-const PART_TIME_NAMES = ["宮田", "天木", "花里", "大橋"];
+const MERCHANDISE_TEAM_NAMES = ["安藤", "草間", "宮田", "上野"];
+const PART_TIME_NAMES = ["安藤", "宮田", "草間", "上野", "天木", "大橋", "花里"];
 const PART_TIME_LEADER_NAMES = ["安藤"];
 
 export function filterTasksForViewer(tasks: OperationTask[], viewer: CurrentViewer, employees: Employee[] = []) {
