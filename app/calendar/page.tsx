@@ -36,7 +36,7 @@ export default async function CalendarPage({
   const visibleCalendarEvents = calendarEvents;
   const visibleProjects = filterProjectsForViewer(projects, visibleTasks, viewer.isAdmin ? calendarEvents : [], viewer);
   const items = buildCalendarItems(visibleProjects, visibleTasks, visibleCalendarEvents);
-  const baseDate = getBaseDate(params?.month, items);
+  const baseDate = getBaseDate(params?.month);
   const days = buildMonthDays(baseDate);
   const monthLabel = `${baseDate.getFullYear()}年 ${baseDate.getMonth() + 1}月`;
   const prevMonth = formatMonthKey(new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1));
@@ -231,13 +231,11 @@ function expandCalendarEvents(events: CalendarEvent[]) {
   });
 }
 
-function getBaseDate(month: string | undefined, items: CalendarItem[]) {
+function getBaseDate(month: string | undefined) {
   const selectedMonth = parseMonthKey(month);
   if (selectedMonth) return selectedMonth;
-  const firstItem = items.toSorted((a, b) => a.date.localeCompare(b.date))[0];
   const now = new Date();
-  const source = firstItem?.date ? new Date(`${firstItem.date}T00:00:00`) : now;
-  return new Date(source.getFullYear(), source.getMonth(), 1);
+  return new Date(now.getFullYear(), now.getMonth(), 1);
 }
 
 function parseDateKey(dateKey: string) {

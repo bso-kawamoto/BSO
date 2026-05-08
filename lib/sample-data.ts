@@ -51,6 +51,8 @@ export const sampleTasks: OperationTask[] = [
     category: "運用",
     priority: "高",
     owner: "Ops",
+    requested_by_id: null,
+    requested_by_name: "社長",
     due_date: "2026-05-20",
     created_at: "2026-04-29T00:00:00.000Z",
     updated_at: "2026-04-29T00:00:00.000Z"
@@ -68,6 +70,8 @@ export const sampleTasks: OperationTask[] = [
     category: "運用",
     priority: "中",
     owner: "河本",
+    requested_by_id: null,
+    requested_by_name: "社長",
     due_date: "2026-05-25",
     created_at: "2026-04-28T00:00:00.000Z",
     updated_at: "2026-04-29T00:00:00.000Z"
@@ -85,6 +89,8 @@ export const sampleTasks: OperationTask[] = [
     category: "営業",
     priority: "低",
     owner: "社長",
+    requested_by_id: null,
+    requested_by_name: "河本",
     due_date: "2026-06-10",
     created_at: "2026-04-27T00:00:00.000Z",
     updated_at: "2026-04-28T00:00:00.000Z"
@@ -102,6 +108,8 @@ export const sampleTasks: OperationTask[] = [
     category: "営業",
     priority: "中",
     owner: "河本",
+    requested_by_id: null,
+    requested_by_name: "社長",
     due_date: "2026-05-15",
     created_at: "2026-04-26T00:00:00.000Z",
     updated_at: "2026-04-29T00:00:00.000Z"

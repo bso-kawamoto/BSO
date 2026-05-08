@@ -569,6 +569,24 @@ a {
   grid-column: 1 / -1;
 }
 
+.completedTaskBox {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.completedTaskBox summary {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.completedTaskList {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .tag {
   padding: 4px 7px;
   border-radius: 6px;

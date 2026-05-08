@@ -46,14 +46,16 @@ export default async function ProjectDetailPage({
   const projectTasks = visibleTasks.filter((task) => task.project_id === project.id);
   const projectEvents = calendarEvents.filter((event) => event.project_id === project.id);
   const completedTasks = projectTasks.filter((task) => task.status === "完了");
+  const activeProjectTasks = projectTasks.filter((task) => task.status !== "完了");
   const overdueTasks = projectTasks.filter((task) => getDueState(task.due_date) === "overdue");
   const soonTasks = projectTasks.filter((task) => {
     const state = getDueState(task.due_date);
     return state === "soon3" || state === "soon7";
   });
   const progress = projectTasks.length === 0 ? 0 : Math.round((completedTasks.length / projectTasks.length) * 100);
-  const middleTasks = projectTasks.filter((task) => task.task_level === "中タスク" || !task.parent_task_id);
-  const childTasks = projectTasks.filter((task) => task.task_level === "小タスク" && task.parent_task_id);
+  const middleTasks = activeProjectTasks.filter((task) => task.task_level === "中タスク" || !task.parent_task_id);
+  const childTasks = activeProjectTasks.filter((task) => task.task_level === "小タスク" && task.parent_task_id);
+  const taskTemplateTitles = buildTaskTemplateTitles(visibleTasks);
   const notice = getNotice(query?.created, query?.schedule, query?.updated, query?.deleted, query?.project);
 
   return (
@@ -144,7 +146,12 @@ export default async function ProjectDetailPage({
                   <input type="hidden" name="project_id" value={project.id} />
                   <div className="field">
                     <label htmlFor="detail-task-title">タスク名</label>
-                    <input id="detail-task-title" name="title" maxLength={120} placeholder="例: 協賛リスト作成" required />
+                    <input id="detail-task-title" name="title" list="project-task-template-options" maxLength={120} placeholder="例: 協賛リスト作成" required />
+                    <datalist id="project-task-template-options">
+                      {taskTemplateTitles.map((title) => (
+                        <option key={title} value={title} />
+                      ))}
+                    </datalist>
                   </div>
                   <div className="formGridTwo">
                     <div className="field">
@@ -190,6 +197,12 @@ export default async function ProjectDetailPage({
                       <label htmlFor="detail-owner">担当者</label>
                       <EmployeeSelect employees={employeeOptions} id="detail-owner" name="assignee_id" />
                     </div>
+                    <div className="field">
+                      <label htmlFor="detail-requester">依頼者</label>
+                      <EmployeeSelect employees={employeeOptions} id="detail-requester" name="requested_by_id" defaultValue={viewer.employee?.id ?? ""} />
+                    </div>
+                  </div>
+                  <div className="formGridTwo">
                     <div className="field">
                       <label htmlFor="detail-due">期日</label>
                       <input id="detail-due" name="due_date" type="date" />
@@ -260,7 +273,7 @@ export default async function ProjectDetailPage({
             </div>
             <div className="detailTaskList">
               {middleTasks.length === 0 ? (
-                <div className="empty">この案件の中タスクはまだありません</div>
+                <div className="empty">この案件の未完了タスクはありません</div>
               ) : (
                 middleTasks.map((task) => {
                   const children = childTasks.filter((child) => child.parent_task_id === task.id);
@@ -290,6 +303,16 @@ export default async function ProjectDetailPage({
                   );
                 })
               )}
+              {completedTasks.length > 0 ? (
+                <details className="completedTaskBox">
+                  <summary>完了済みタスク {completedTasks.length}件</summary>
+                  <div className="completedTaskList">
+                    {completedTasks.map((task) => (
+                      <DetailTaskCard employees={employeeOptions} key={task.id} parentCandidates={middleTasks} projectId={project.id} task={task} />
+                    ))}
+                  </div>
+                </details>
+              ) : null}
             </div>
           </div>
 
@@ -322,16 +345,18 @@ export default async function ProjectDetailPage({
 }
 
 function EmployeeSelect({
+  defaultValue = "",
   employees,
   id,
   name
 }: {
+  defaultValue?: string;
   employees: Employee[];
   id: string;
   name: string;
 }) {
   return (
-    <select id={id} name={name} defaultValue="">
+    <select id={id} name={name} defaultValue={defaultValue}>
       <option value="">未割当</option>
       {employees.map((employee) => (
         <option key={employee.id} value={employee.id}>
@@ -399,6 +424,10 @@ function Summary({ label, value }: { label: string; value: number }) {
   );
 }
 
+function buildTaskTemplateTitles(tasks: OperationTask[]) {
+  return [...new Set(tasks.map((task) => task.title).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja")).slice(0, 80);
+}
+
 function DetailTaskCard({
   employees,
   parentCandidates,
@@ -460,6 +489,17 @@ function DetailTaskCard({
           </select>
         </div>
         <div className="field">
+          <label htmlFor={`task-requester-${task.id}`}>依頼者</label>
+          <select id={`task-requester-${task.id}`} name="requested_by_id" defaultValue={task.requested_by_id ?? ""}>
+            <option value="">未設定</option>
+            {employees.map((employee) => (
+              <option key={employee.id} value={employee.id}>
+                {employee.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
           <label htmlFor={`task-status-${task.id}`}>状態</label>
           <select id={`task-status-${task.id}`} name="status" defaultValue={task.status}>
             {STATUSES.map((status) => (
@@ -489,6 +529,9 @@ function DetailTaskCard({
       </form>
       <div className="taskMeta">
         {task.due_date ? <span>{getDueLabel(task.due_date, state)}</span> : <span>期限 未設定</span>}
+        <span>担当 {task.owner}</span>
+        {task.requested_by_name ? <span>依頼 {task.requested_by_name}</span> : null}
+        <span>{task.category}</span>
       </div>
       {task.memo ? <p className="taskMemo">{task.memo}</p> : null}
       <form action={deleteProjectTask} className="deleteForm">

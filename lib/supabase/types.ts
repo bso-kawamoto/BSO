@@ -83,6 +83,8 @@ export type Database = {
           category: TaskCategory;
           priority: TaskPriority;
           owner: string;
+          requested_by_id: string | null;
+          requested_by_name: string | null;
           due_date: string | null;
           created_at: string;
           updated_at: string;
@@ -100,6 +102,8 @@ export type Database = {
           category: TaskCategory;
           priority?: TaskPriority;
           owner?: string;
+          requested_by_id?: string | null;
+          requested_by_name?: string | null;
           due_date?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -117,6 +121,8 @@ export type Database = {
           category?: TaskCategory;
           priority?: TaskPriority;
           owner?: string;
+          requested_by_id?: string | null;
+          requested_by_name?: string | null;
           due_date?: string | null;
           created_at?: string;
           updated_at?: string;

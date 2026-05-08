@@ -109,7 +109,7 @@ export async function getTasks(): Promise<OperationTask[]> {
   const { data, error } = await supabase
     .from("operation_tasks")
     .select(
-      "id,project_id,parent_task_id,assignee_id,task_level,title,description,memo,status,category,priority,owner,due_date,created_at,updated_at"
+      "id,project_id,parent_task_id,assignee_id,task_level,title,description,memo,status,category,priority,owner,requested_by_id,requested_by_name,due_date,created_at,updated_at"
     )
     .order("created_at", { ascending: false });
 
@@ -127,7 +127,9 @@ export async function getTasks(): Promise<OperationTask[]> {
 
     return (legacyData ?? []).map((task) => ({
       ...task,
-      memo: null
+      memo: null,
+      requested_by_id: null,
+      requested_by_name: null
     }));
   }
 

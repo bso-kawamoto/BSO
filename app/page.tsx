@@ -40,6 +40,7 @@ export default async function Home({
   const notice = getNotice(params?.created, params?.updated, params?.project, params?.schedule);
   const sortedProjects = sortProjects(visibleProjects, visibleTasks, params?.sort);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
+  const taskTemplateTitles = buildTaskTemplateTitles(tasks);
 
   return (
     <main className="page">
@@ -163,7 +164,12 @@ export default async function Home({
             <form action={createTask} className="quickForm">
               <div className="field">
                 <label htmlFor="title">タスク名</label>
-                <input id="title" name="title" maxLength={120} placeholder="例: 協賛リスト作成" required />
+                <input id="title" name="title" list="task-template-options" maxLength={120} placeholder="例: 協賛リスト作成" required />
+                <datalist id="task-template-options">
+                  {taskTemplateTitles.map((title) => (
+                    <option key={title} value={title} />
+                  ))}
+                </datalist>
               </div>
               <div className="field">
                 <label htmlFor="project">案件</label>
@@ -214,6 +220,10 @@ export default async function Home({
               <div className="field">
                 <label htmlFor="owner">担当者</label>
                 <EmployeeSelect id="owner" employees={employeeOptions} name="assignee_id" defaultValue={viewer.employee?.id ?? ""} />
+              </div>
+              <div className="field">
+                <label htmlFor="requester">依頼者</label>
+                <EmployeeSelect id="requester" employees={employeeOptions} name="requested_by_id" defaultValue={viewer.employee?.id ?? ""} />
               </div>
               <div className="field">
                 <label htmlFor="due-date">期日</label>
@@ -300,6 +310,10 @@ function filterProjectsForViewer(projects: Project[], tasks: OperationTask[], ev
   return projects.filter((project) => projectIds.has(project.id));
 }
 
+function buildTaskTemplateTitles(tasks: OperationTask[]) {
+  return [...new Set(tasks.map((task) => task.title).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja")).slice(0, 80);
+}
+
 function sortProjects(projects: Project[], tasks: OperationTask[], sort?: string) {
   const decorated = projects.map((project, index) => {
     const projectTasks = tasks.filter((task) => task.project_id === project.id);
@@ -327,11 +341,6 @@ function sortProjects(projects: Project[], tasks: OperationTask[], sort?: string
   return decorated.toSorted((a, b) => a.index - b.index).map((item) => item.project);
 }
 
-type BoardCalendarEvent = {
-  date: string;
-  kind: "project" | "task";
-};
-
 const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
 
 function BoardCalendar({
@@ -350,10 +359,7 @@ function BoardCalendar({
     ...tasks.filter((task) => task.due_date).map((task) => ({ date: task.due_date as string, kind: "task" as const }))
   ];
   const scheduleInstances = expandCalendarEvents(calendarEvents);
-  const baseDate = getCalendarBaseDate(month, [
-    ...deadlineEvents,
-    ...scheduleInstances.map((event) => ({ date: event.date, kind: "task" as const }))
-  ]);
+  const baseDate = getCalendarBaseDate(month);
   const days = buildMonthDays(baseDate);
   const prevMonth = formatMonthKey(new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1));
   const nextMonth = formatMonthKey(new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1));
@@ -448,16 +454,14 @@ function parseDateKey(dateKey: string) {
   return new Date(`${dateKey}T00:00:00`);
 }
 
-function getCalendarBaseDate(month: string | undefined, events: BoardCalendarEvent[]) {
+function getCalendarBaseDate(month: string | undefined) {
   const selectedMonth = parseMonthKey(month);
   if (selectedMonth) {
     return selectedMonth;
   }
 
-  const firstEvent = events.toSorted((a, b) => a.date.localeCompare(b.date))[0];
   const now = new Date();
-  const source = firstEvent?.date ? new Date(`${firstEvent.date}T00:00:00`) : now;
-  return new Date(source.getFullYear(), source.getMonth(), 1);
+  return new Date(now.getFullYear(), now.getMonth(), 1);
 }
 
 function parseMonthKey(month?: string) {
@@ -570,6 +574,7 @@ function TaskCard({ employees, task }: { employees: Employee[]; task: OperationT
         <span className="tag">{task.category}</span>
         <span className={`tag ${priorityClass}`}>優先度 {task.priority}</span>
         <span>{task.owner}</span>
+        {task.requested_by_name ? <span>依頼 {task.requested_by_name}</span> : null}
         {task.due_date ? <span>期限 {task.due_date}</span> : null}
       </div>
       {task.memo ? <p className="taskMemo">{task.memo}</p> : null}
@@ -628,6 +633,17 @@ function TaskCard({ employees, task }: { employees: Employee[]; task: OperationT
             </select>
           </div>
           <div className="field">
+            <label htmlFor={`board-task-requester-${task.id}`}>依頼者</label>
+            <select id={`board-task-requester-${task.id}`} name="requested_by_id" defaultValue={task.requested_by_id ?? ""}>
+              <option value="">未設定</option>
+              {employees.map((employee) => (
+                <option key={employee.id} value={employee.id}>
+                  {employee.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
             <label htmlFor={`board-task-due-${task.id}`}>期日</label>
             <input id={`board-task-due-${task.id}`} name="due_date" type="date" defaultValue={task.due_date ?? ""} />
           </div>
@@ -645,8 +661,10 @@ function TaskCard({ employees, task }: { employees: Employee[]; task: OperationT
 }
 
 function ProjectCard({ employees, project, tasks }: { employees: Employee[]; project: Project | null; tasks: OperationTask[] }) {
-  const middleTasks = tasks.filter((task) => task.task_level === TASK_LEVELS[0] || !task.parent_task_id);
-  const childTasks = tasks.filter((task) => task.task_level === TASK_LEVELS[1] && task.parent_task_id);
+  const openTasks = tasks.filter((task) => task.status !== STATUSES[3]);
+  const completedTasks = tasks.filter((task) => task.status === STATUSES[3]);
+  const middleTasks = openTasks.filter((task) => task.task_level === TASK_LEVELS[0] || !task.parent_task_id);
+  const childTasks = openTasks.filter((task) => task.task_level === TASK_LEVELS[1] && task.parent_task_id);
   const completeCount = tasks.filter((task) => task.status === STATUSES[3]).length;
 
   return (
@@ -669,7 +687,7 @@ function ProjectCard({ employees, project, tasks }: { employees: Employee[]; pro
       </header>
       <div className="projectTaskList">
         {middleTasks.length === 0 ? (
-          <div className="empty">中タスクなし</div>
+          <div className="empty">未完了タスクなし</div>
         ) : (
           middleTasks.map((task) => {
             const children = childTasks.filter((child) => child.parent_task_id === task.id);
@@ -686,6 +704,16 @@ function ProjectCard({ employees, project, tasks }: { employees: Employee[]; pro
             );
           })
         )}
+        {completedTasks.length > 0 ? (
+          <details className="completedTaskBox">
+            <summary>完了済みタスク {completedTasks.length}件</summary>
+            <div className="completedTaskList">
+              {completedTasks.map((task) => (
+                <TaskCard employees={employees} key={task.id} task={task} />
+              ))}
+            </div>
+          </details>
+        ) : null}
       </div>
     </section>
   );

@@ -165,6 +165,17 @@ function AdminTaskRow({
           </select>
         </div>
         <div className="field">
+          <label htmlFor={`requester-${task.id}`}>依頼者</label>
+          <select id={`requester-${task.id}`} name="requested_by_id" defaultValue={task.requested_by_id ?? ""}>
+            <option value="">未設定</option>
+            {employees.map((employee) => (
+              <option key={employee.id} value={employee.id}>
+                {employee.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
           <label htmlFor={`status-${task.id}`}>ステータス</label>
           <select id={`status-${task.id}`} name="status" defaultValue={task.status}>
             {STATUSES.map((status) => (
