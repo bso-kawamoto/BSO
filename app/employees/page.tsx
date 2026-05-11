@@ -74,7 +74,7 @@ export default async function EmployeesPage({
           {!viewer.isAdmin ? <p className="notice noticeSuccess">本人分だけを表示しています。</p> : null}
 
           <div className="employeeGrid">
-            {sortedCards.map(({ employee, openTasks, overdue, soon, upcomingEvents }) => (
+            {sortedCards.map(({ completedTasks, employee, openTasks, overdue, soon, upcomingEvents }) => (
               <article className="employeeCard" key={employee.id}>
                 <header>
                   <h2>{employee.name}</h2>
@@ -86,14 +86,21 @@ export default async function EmployeesPage({
                   <Summary label="近日期限" value={soon.length} />
                 </div>
                 <div className="miniList">
-                  {openTasks.slice(0, 4).map((task) => (
-                    <div className="miniRow" key={task.id}>
-                      <strong>{task.title}</strong>
-                      <span>{task.due_date ?? "期限なし"}</span>
-                    </div>
+                  {openTasks.map((task) => (
+                    <EmployeeTaskRow key={task.id} task={task} />
                   ))}
                   {openTasks.length === 0 ? <div className="empty">担当タスクなし</div> : null}
                 </div>
+                {completedTasks.length > 0 ? (
+                  <details className="completedTaskBox employeeCompletedBox">
+                    <summary>完了済みタスク</summary>
+                    <div className="completedTaskList">
+                      {completedTasks.map((task) => (
+                        <EmployeeTaskRow key={task.id} task={task} />
+                      ))}
+                    </div>
+                  </details>
+                ) : null}
                 <div className="miniList">
                   {upcomingEvents.map((event) => (
                     <div className="miniRow" key={event.id}>
@@ -129,10 +136,27 @@ function SortLink({ active, href, label }: { active: boolean; href: string; labe
   );
 }
 
+function EmployeeTaskRow({ task }: { task: OperationTask }) {
+  return (
+    <div className="miniRow employeeTaskRow">
+      <div className="employeeTaskMain">
+        <strong>{task.title}</strong>
+        <div className="employeeTaskMeta">
+          <span>{task.status}</span>
+          <span>{task.category}</span>
+          <span>{task.due_date ?? "期限なし"}</span>
+        </div>
+        {task.memo ? <p>{task.memo}</p> : null}
+      </div>
+    </div>
+  );
+}
+
 function buildEmployeeCards(employees: Employee[], tasks: OperationTask[], events: CalendarEvent[]) {
   return employees.map((employee) => {
     const employeeTasks = tasks.filter((task) => task.assignee_id === employee.id);
     const openTasks = employeeTasks.filter((task) => task.status !== STATUSES[3]);
+    const completedTasks = employeeTasks.filter((task) => task.status === STATUSES[3]);
     const overdue = openTasks.filter((task) => getDueBucket(task.due_date) === "overdue");
     const soon = openTasks.filter((task) => {
       const bucket = getDueBucket(task.due_date);
@@ -145,6 +169,7 @@ function buildEmployeeCards(employees: Employee[], tasks: OperationTask[], event
 
     return {
       employee,
+      completedTasks: completedTasks.sort(sortTasksByDueDate),
       openTasks: openTasks.sort(sortTasksByDueDate),
       overdue,
       soon,
