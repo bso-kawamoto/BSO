@@ -1230,6 +1230,7 @@ a {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+  align-items: start;
 }
 
 .employeeToolbar {
@@ -1263,6 +1264,7 @@ a {
 .employeeCard {
   display: grid;
   gap: 14px;
+  align-self: start;
   padding: 16px;
   border: 1px solid var(--border);
   border-radius: 8px;
