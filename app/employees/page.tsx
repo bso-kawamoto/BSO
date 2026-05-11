@@ -4,8 +4,8 @@ import { logout } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
 import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
 import { filterEmployeesForViewer } from "@/lib/task-visibility";
-import { getCalendarEvents, getEmployees, getTasks } from "@/lib/tasks";
-import { STATUSES, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
+import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
+import { STATUSES, type CalendarEvent, type Employee, type OperationTask, type Project } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -15,13 +15,14 @@ export default async function EmployeesPage({
   searchParams?: Promise<{ sort?: string }>;
 }) {
   const params = await searchParams;
-  const [employees, tasks, events] = await Promise.all([getEmployees(), getTasks(), getCalendarEvents()]);
+  const [employees, tasks, events, projects] = await Promise.all([getEmployees(), getTasks(), getCalendarEvents(), getProjects(true)]);
   const viewer = await getCurrentViewer(employees);
 
   if (!viewer) {
     redirect("/login?next=/employees");
   }
 
+  const projectNames = buildProjectNameMap(projects);
   const cards = buildEmployeeCards(filterEmployeesForViewer(employees, viewer), tasks, events);
   const currentSort = params?.sort ?? "name";
   const sortedCards = sortEmployeeCards(cards, currentSort, viewer.employee?.id);
@@ -87,7 +88,7 @@ export default async function EmployeesPage({
                 </div>
                 <div className="miniList">
                   {openTasks.map((task) => (
-                    <EmployeeTaskRow key={task.id} task={task} />
+                    <EmployeeTaskRow key={task.id} projectName={getProjectName(projectNames, task.project_id)} task={task} />
                   ))}
                   {openTasks.length === 0 ? <div className="empty">担当タスクなし</div> : null}
                 </div>
@@ -96,7 +97,7 @@ export default async function EmployeesPage({
                     <summary>完了済みタスク</summary>
                     <div className="completedTaskList">
                       {completedTasks.map((task) => (
-                        <EmployeeTaskRow key={task.id} task={task} />
+                        <EmployeeTaskRow key={task.id} projectName={getProjectName(projectNames, task.project_id)} task={task} />
                       ))}
                     </div>
                   </details>
@@ -136,12 +137,13 @@ function SortLink({ active, href, label }: { active: boolean; href: string; labe
   );
 }
 
-function EmployeeTaskRow({ task }: { task: OperationTask }) {
+function EmployeeTaskRow({ projectName, task }: { projectName: string; task: OperationTask }) {
   return (
     <div className="miniRow employeeTaskRow">
       <div className="employeeTaskMain">
         <strong>{task.title}</strong>
         <div className="employeeTaskMeta">
+          <span>{projectName}</span>
           <span>{task.status}</span>
           <span>{task.category}</span>
           <span>{task.due_date ?? "期限なし"}</span>
@@ -150,6 +152,18 @@ function EmployeeTaskRow({ task }: { task: OperationTask }) {
       </div>
     </div>
   );
+}
+
+function buildProjectNameMap(projects: Project[]) {
+  return new Map(projects.map((project) => [project.id, project.name]));
+}
+
+function getProjectName(projectNames: Map<string, string>, projectId: string | null) {
+  if (!projectId) {
+    return "案件なし";
+  }
+
+  return projectNames.get(projectId) ?? "案件不明";
 }
 
 function buildEmployeeCards(employees: Employee[], tasks: OperationTask[], events: CalendarEvent[]) {
