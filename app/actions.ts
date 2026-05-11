@@ -10,6 +10,7 @@ import { getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
   MANAGERS,
+  MIDDLE_TASK_TEMPLATES,
   PRIORITIES,
   STATUSES,
   TASK_LEVELS,
@@ -95,14 +96,42 @@ export async function createProject(formData: FormData) {
     redirect("/?project=missing-env");
   }
 
-  const { error } = await supabase.from("projects").insert({
+  const { data, error } = await supabase
+    .from("projects")
+    .insert({
     name,
     description: null,
     due_date: dueDate
-  });
+    })
+    .select("id")
+    .single();
 
-  if (error) {
-    console.error("Failed to create project:", error.message);
+  if (error || !data) {
+    console.error("Failed to create project:", error?.message ?? "No project returned");
+    redirect("/?project=error");
+  }
+
+  const { error: taskError } = await supabase.from("operation_tasks").insert(
+    MIDDLE_TASK_TEMPLATES.map((title) => ({
+      project_id: data.id,
+      parent_task_id: null,
+      assignee_id: null,
+      task_level: "中タスク" as const,
+      title,
+      category: "管理部" as const,
+      status: "未着手" as const,
+      priority: "中" as const,
+      owner: "未割当",
+      requested_by_id: null,
+      requested_by_name: null,
+      description: null,
+      memo: null,
+      due_date: null
+    }))
+  );
+
+  if (taskError) {
+    console.error("Failed to create default middle tasks:", taskError.message);
     redirect("/?project=error");
   }
 

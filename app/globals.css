@@ -439,6 +439,47 @@ a {
   padding: 14px;
 }
 
+.projectSummaryBody {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.projectProgressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.projectProgressHeader strong {
+  color: var(--accent);
+  font-size: 18px;
+}
+
+.projectProgressTrack {
+  height: 9px;
+}
+
+.projectStats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.projectStats span {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .taskGroup {
   display: grid;
   gap: 8px;

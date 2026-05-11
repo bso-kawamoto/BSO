@@ -1,8 +1,9 @@
 export const STATUSES = ["未着手", "進行中", "確認待ち", "完了"] as const;
-export const CATEGORIES = ["営業", "運用", "請求", "サポート", "管理", "物販"] as const;
+export const CATEGORIES = ["大会", "ALLJAPAN", "スクール", "物販", "チーム", "イベント", "広報", "システム", "管理部"] as const;
 export const PRIORITIES = ["低", "中", "高"] as const;
 export const MANAGERS = ["社長", "河本"] as const;
 export const TASK_LEVELS = ["中タスク", "小タスク"] as const;
+export const MIDDLE_TASK_TEMPLATES = ["企画", "広報", "顧客対応", "運営", "管理", "製作", "調整", "システム", "当日対応", "振り返り"] as const;
 export const EMPLOYEE_NAMES = ["河本", "高橋", "大鋸", "松本", "安藤", "草間", "上野", "平賀", "宮田", "天木", "花里", "大橋"] as const;
 
 export type TaskStatus = (typeof STATUSES)[number];

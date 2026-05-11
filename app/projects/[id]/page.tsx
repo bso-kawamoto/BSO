@@ -15,7 +15,7 @@ import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
-import { CATEGORIES, PRIORITIES, STATUSES, TASK_LEVELS, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
+import { CATEGORIES, MIDDLE_TASK_TEMPLATES, PRIORITIES, STATUSES, TASK_LEVELS, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -166,6 +166,9 @@ export default async function ProjectDetailPage({
                     <label htmlFor="detail-task-title">タスク名</label>
                     <input id="detail-task-title" name="title" list="project-task-template-options" maxLength={120} placeholder="例: 協賛リスト作成" required />
                     <datalist id="project-task-template-options">
+                      {MIDDLE_TASK_TEMPLATES.map((title) => (
+                        <option key={title} value={title} />
+                      ))}
                       {taskTemplateTitles.map((title) => (
                         <option key={title} value={title} />
                       ))}

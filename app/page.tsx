@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createCalendarEvent, createProject, createTask, logout, updateTaskDetails, updateTaskStatus } from "@/app/actions";
+import { createCalendarEvent, createProject, createTask, logout } from "@/app/actions";
 import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
+  MIDDLE_TASK_TEMPLATES,
   PRIORITIES,
   STATUSES,
   TASK_LEVELS,
@@ -166,6 +167,9 @@ export default async function Home({
                 <label htmlFor="title">タスク名</label>
                 <input id="title" name="title" list="task-template-options" maxLength={120} placeholder="例: 協賛リスト作成" required />
                 <datalist id="task-template-options">
+                  {MIDDLE_TASK_TEMPLATES.map((title) => (
+                    <option key={title} value={title} />
+                  ))}
                   {taskTemplateTitles.map((title) => (
                     <option key={title} value={title} />
                   ))}
@@ -273,16 +277,10 @@ export default async function Home({
           </div>
           <div className="projectBoard">
             {sortedProjects.map((project) => (
-              <ProjectCard
-                employees={employeeOptions}
-                key={project.id}
-                project={project}
-                projects={projects}
-                tasks={visibleTasks.filter((task) => task.project_id === project.id)}
-              />
+              <ProjectCard key={project.id} project={project} tasks={visibleTasks.filter((task) => task.project_id === project.id)} />
             ))}
             {visibleTasks.some((task) => !task.project_id) ? (
-              <ProjectCard employees={employeeOptions} project={null} projects={projects} tasks={visibleTasks.filter((task) => !task.project_id)} />
+              <ProjectCard project={null} tasks={visibleTasks.filter((task) => !task.project_id)} />
             ) : null}
             {visibleProjects.length === 0 && visibleTasks.length === 0 ? <div className="empty">表示できる案件・タスクがありません</div> : null}
           </div>
@@ -570,127 +568,12 @@ function Summary({ label, value }: { label: string; value: number }) {
   );
 }
 
-function TaskCard({ employees, projects, task }: { employees: Employee[]; projects: Project[]; task: OperationTask }) {
-  const priorityClass = task.priority === PRIORITIES[2] ? "priorityHigh" : task.priority === PRIORITIES[1] ? "priorityMedium" : "priorityLow";
-
-  return (
-    <article className="task">
-      <div className="taskTitle">
-        <span className="levelMark">{task.task_level}</span>
-        {task.title}
-      </div>
-      <div className="taskMeta">
-        <span className="tag">{task.category}</span>
-        <span className={`tag ${priorityClass}`}>優先度 {task.priority}</span>
-        <span>{task.owner}</span>
-        {task.requested_by_name ? <span>依頼 {task.requested_by_name}</span> : null}
-        {task.due_date ? <span>期限 {task.due_date}</span> : null}
-      </div>
-      {task.memo ? <p className="taskMemo">{task.memo}</p> : null}
-      <form action={updateTaskStatus} className="inlineForm">
-        <input type="hidden" name="id" value={task.id} />
-        <select aria-label={`${task.title}のステータス`} name="status" defaultValue={task.status}>
-          {STATUSES.map((status) => (
-            <option key={status}>{status}</option>
-          ))}
-        </select>
-        <button className="smallButton" type="submit">
-          更新
-        </button>
-      </form>
-      <details className="taskEditDetails">
-        <summary>内容を修正</summary>
-        <form action={updateTaskDetails} className="boardTaskEditForm">
-          <input type="hidden" name="id" value={task.id} />
-          <div className="field wideField">
-            <label htmlFor={`board-task-title-${task.id}`}>タスク名</label>
-            <input id={`board-task-title-${task.id}`} name="title" defaultValue={task.title} maxLength={120} required />
-          </div>
-          <div className="field">
-            <label htmlFor={`board-task-project-${task.id}`}>案件</label>
-            <select id={`board-task-project-${task.id}`} name="project_id" defaultValue={task.project_id ?? ""}>
-              <option value="">案件なし</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor={`board-task-category-${task.id}`}>カテゴリ</label>
-            <select id={`board-task-category-${task.id}`} name="category" defaultValue={task.category}>
-              {CATEGORIES.map((category) => (
-                <option key={category}>{category}</option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor={`board-task-status-${task.id}`}>状態</label>
-            <select id={`board-task-status-${task.id}`} name="status" defaultValue={task.status}>
-              {STATUSES.map((status) => (
-                <option key={status}>{status}</option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor={`board-task-priority-${task.id}`}>優先度</label>
-            <select id={`board-task-priority-${task.id}`} name="priority" defaultValue={task.priority}>
-              {PRIORITIES.map((priority) => (
-                <option key={priority}>{priority}</option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor={`board-task-owner-${task.id}`}>担当</label>
-            <select id={`board-task-owner-${task.id}`} name="assignee_id" defaultValue={task.assignee_id ?? ""}>
-              <option value="">未割当</option>
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor={`board-task-requester-${task.id}`}>依頼者</label>
-            <select id={`board-task-requester-${task.id}`} name="requested_by_id" defaultValue={getRequesterDefaultValue(task)}>
-              <option value="">未設定</option>
-              <option value="__president__">社長</option>
-              {employees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor={`board-task-due-${task.id}`}>期日</label>
-            <input id={`board-task-due-${task.id}`} name="due_date" type="date" defaultValue={task.due_date ?? ""} />
-          </div>
-          <div className="field memoField">
-            <label htmlFor={`board-task-memo-${task.id}`}>進捗メモ</label>
-            <textarea id={`board-task-memo-${task.id}`} name="memo" defaultValue={task.memo ?? ""} rows={2} maxLength={1000} />
-          </div>
-          <button className="smallButton" type="submit">
-            保存
-          </button>
-        </form>
-      </details>
-    </article>
-  );
-}
-
-function getRequesterDefaultValue(task: OperationTask) {
-  return task.requested_by_id ?? (task.requested_by_name === "社長" ? "__president__" : "");
-}
-
-function ProjectCard({ employees, project, projects, tasks }: { employees: Employee[]; project: Project | null; projects: Project[]; tasks: OperationTask[] }) {
+function ProjectCard({ project, tasks }: { project: Project | null; tasks: OperationTask[] }) {
   const openTasks = tasks.filter((task) => task.status !== STATUSES[3]);
-  const completedTasks = tasks.filter((task) => task.status === STATUSES[3]);
-  const middleTasks = openTasks.filter((task) => task.task_level === TASK_LEVELS[0] || !task.parent_task_id);
-  const childTasks = openTasks.filter((task) => task.task_level === TASK_LEVELS[1] && task.parent_task_id);
-  const completeCount = tasks.filter((task) => task.status === STATUSES[3]).length;
+  const completeCount = tasks.length - openTasks.length;
+  const progress = tasks.length === 0 ? 0 : Math.round((completeCount / tasks.length) * 100);
+  const middleCount = tasks.filter((task) => task.task_level === TASK_LEVELS[0] || !task.parent_task_id).length;
+  const childCount = tasks.filter((task) => task.task_level === TASK_LEVELS[1] && task.parent_task_id).length;
 
   return (
     <section className="projectCard">
@@ -700,9 +583,6 @@ function ProjectCard({ employees, project, projects, tasks }: { employees: Emplo
           <p>{project?.due_date ? `案件期日 ${project.due_date}` : "案件期日 未設定"}</p>
         </div>
         <div className="projectHeaderActions">
-          <span className="count">
-            {completeCount}/{tasks.length}
-          </span>
           {project ? (
             <Link className="detailLink" href={`/projects/${project.id}`}>
               詳細
@@ -710,35 +590,21 @@ function ProjectCard({ employees, project, projects, tasks }: { employees: Emplo
           ) : null}
         </div>
       </header>
-      <div className="projectTaskList">
-        {middleTasks.length === 0 ? (
-          <div className="empty">未完了タスクなし</div>
-        ) : (
-          middleTasks.map((task) => {
-            const children = childTasks.filter((child) => child.parent_task_id === task.id);
-
-            return (
-              <div className="taskGroup" key={task.id}>
-                <TaskCard employees={employees} projects={projects} task={task} />
-                <div className="childTasks">
-                  {children.map((child) => (
-                    <TaskCard employees={employees} key={child.id} projects={projects} task={child} />
-                  ))}
-                </div>
-              </div>
-            );
-          })
-        )}
-        {completedTasks.length > 0 ? (
-          <details className="completedTaskBox">
-            <summary>完了済みタスク {completedTasks.length}件</summary>
-            <div className="completedTaskList">
-              {completedTasks.map((task) => (
-                <TaskCard employees={employees} key={task.id} projects={projects} task={task} />
-              ))}
-            </div>
-          </details>
-        ) : null}
+      <div className="projectSummaryBody">
+        <div className="projectProgressHeader">
+          <span>進捗</span>
+          <strong>{progress}%</strong>
+        </div>
+        <div className="progressTrack projectProgressTrack" aria-label={`進捗 ${progress}%`}>
+          <span style={{ width: `${progress}%` }} />
+        </div>
+        <div className="projectStats">
+          <span>全タスク {tasks.length}</span>
+          <span>未完了 {openTasks.length}</span>
+          <span>完了 {completeCount}</span>
+          <span>中 {middleCount}</span>
+          <span>小 {childCount}</span>
+        </div>
       </div>
     </section>
   );
