@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
+  bulkUpdateTaskManagement,
   createRegularTask,
   deleteRegularTask,
   deleteTask,
@@ -31,6 +32,7 @@ export default async function AdminPage({
 }: {
   searchParams?: Promise<{
     assignee?: string;
+    bulk?: string;
     count?: string;
     deleted?: string;
     project?: string;
@@ -55,7 +57,7 @@ export default async function AdminPage({
   }
 
   const manager = viewer.kind === "boss" ? MANAGERS[0] : MANAGERS[1];
-  const notice = getAdminNotice(params?.updated, params?.deleted, params?.teams, params?.count, params?.regular, params?.projectUpdate);
+  const notice = getAdminNotice(params?.updated, params?.deleted, params?.teams, params?.count, params?.regular, params?.projectUpdate, params?.bulk);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
   const filteredTasks = filterAdminTasks(tasks, params);
   const visibleTasks = filteredTasks.slice(0, 40);
@@ -181,6 +183,77 @@ export default async function AdminPage({
               ))}
               {regularTasks.length === 0 ? <div className="empty">登録済みのレギュラー業務はありません</div> : null}
             </div>
+          </section>
+          <section className="panel bulkTaskPanel">
+            <h2>表示中タスクをまとめて変更</h2>
+            <p className="mutedText">下に表示されている最大40件だけが対象です。空欄の項目は変更しません。</p>
+            <form action={bulkUpdateTaskManagement} className="bulkTaskForm">
+              {visibleTasks.map((task) => (
+                <input key={task.id} type="hidden" name="task_ids" value={task.id} />
+              ))}
+              <div className="field">
+                <label htmlFor="bulk-project">案件</label>
+                <select id="bulk-project" name="bulk_project_id" defaultValue="">
+                  <option value="">変更しない</option>
+                  <option value="__none__">案件なしにする</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="bulk-assignee">担当者</label>
+                <select id="bulk-assignee" name="bulk_assignee_id" defaultValue="">
+                  <option value="">変更しない</option>
+                  <option value="__none__">未割当にする</option>
+                  {employeeOptions.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="bulk-category">カテゴリ</label>
+                <select id="bulk-category" name="bulk_category" defaultValue="">
+                  <option value="">変更しない</option>
+                  {CATEGORIES.map((category) => (
+                    <option key={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="bulk-status">状態</label>
+                <select id="bulk-status" name="bulk_status" defaultValue="">
+                  <option value="">変更しない</option>
+                  {STATUSES.map((status) => (
+                    <option key={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="bulk-priority">優先度</label>
+                <select id="bulk-priority" name="bulk_priority" defaultValue="">
+                  <option value="">変更しない</option>
+                  {PRIORITIES.map((priority) => (
+                    <option key={priority}>{priority}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="bulk-due">期日</label>
+                <input id="bulk-due" name="bulk_due_date" type="date" />
+              </div>
+              <label className="checkField bulkCheckField" htmlFor="bulk-clear-due">
+                <input id="bulk-clear-due" name="bulk_clear_due_date" type="checkbox" />
+                <span>期日を空にする</span>
+              </label>
+              <button className="button" type="submit" disabled={visibleTasks.length === 0}>
+                表示中{visibleTasks.length}件をまとめて更新
+              </button>
+            </form>
           </section>
           <div className="adminList">
             <p className="mutedText">表示 {visibleTasks.length}件 / 該当 {filteredTasks.length}件 / 全体 {tasks.length}件</p>
@@ -412,7 +485,19 @@ function filterAdminTasks(
   });
 }
 
-function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string, regular?: string, projectUpdate?: string) {
+function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string, regular?: string, projectUpdate?: string, bulk?: string) {
+  if (bulk === "success") {
+    return { kind: "noticeSuccess", message: `表示中タスクをまとめて更新しました。対象 ${count ?? "0"} 件。` };
+  }
+
+  if (bulk === "empty") {
+    return { kind: "noticeError", message: "まとめて変更する項目を選んでください。" };
+  }
+
+  if (bulk === "invalid" || bulk === "missing-env" || bulk === "error") {
+    return { kind: "noticeError", message: "まとめて更新に失敗しました。条件とSupabase設定を確認してください。" };
+  }
+
   if (projectUpdate === "success") {
     return { kind: "noticeSuccess", message: "案件を更新しました。" };
   }

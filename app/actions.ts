@@ -710,6 +710,71 @@ export async function updateTaskManagement(formData: FormData) {
   redirect(`/admin?manager=${encodeURIComponent(manager)}&updated=success`);
 }
 
+export async function bulkUpdateTaskManagement(formData: FormData) {
+  const ids = formData
+    .getAll("task_ids")
+    .filter((value): value is string => typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value))
+    .slice(0, 40);
+  const category = readOptionalCategory(formData, "bulk_category");
+  const status = readOptionalStatus(formData, "bulk_status");
+  const priority = readOptionalPriority(formData, "bulk_priority");
+  const projectId = readBulkNullableUuid(formData, "bulk_project_id");
+  const assigneeId = readBulkNullableUuid(formData, "bulk_assignee_id");
+  const dueDate = readDate(formData, "bulk_due_date", false);
+  const clearDueDate = readBoolean(formData, "bulk_clear_due_date");
+
+  if (ids.length === 0) {
+    redirect("/admin?bulk=invalid");
+  }
+
+  const updatePayload: {
+    assignee_id?: string | null;
+    category?: TaskCategory;
+    due_date?: string | null;
+    owner?: string;
+    priority?: TaskPriority;
+    project_id?: string | null;
+    status?: TaskStatus;
+  } = {};
+
+  if (category) updatePayload.category = category;
+  if (status) updatePayload.status = status;
+  if (priority) updatePayload.priority = priority;
+  if (projectId !== undefined) updatePayload.project_id = projectId;
+  if (assigneeId !== undefined) {
+    updatePayload.assignee_id = assigneeId;
+    updatePayload.owner = (await getAssigneeName(assigneeId)) ?? "未割当";
+  }
+  if (clearDueDate) {
+    updatePayload.due_date = null;
+  } else if (dueDate) {
+    updatePayload.due_date = dueDate;
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    redirect("/admin?bulk=empty");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect("/admin?bulk=missing-env");
+  }
+
+  const { error } = await supabase.from("operation_tasks").update(updatePayload).in("id", ids);
+
+  if (error) {
+    console.error("Failed to bulk update tasks:", error.message);
+    redirect("/admin?bulk=error");
+  }
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/employees");
+  revalidatePath("/today");
+  redirect(`/admin?bulk=success&count=${ids.length}`);
+}
+
 export async function updateProjectTask(formData: FormData) {
   const projectId = readNullableUuid(formData, "project_id");
   const id = readText(formData, "id");
@@ -993,8 +1058,18 @@ function readCategory(formData: FormData): TaskCategory | null {
     : null;
 }
 
+function readOptionalCategory(formData: FormData, key: string): TaskCategory | null {
+  const value = formData.get(key);
+  return typeof value === "string" && CATEGORIES.includes(value as TaskCategory) ? (value as TaskCategory) : null;
+}
+
 function readStatus(formData: FormData): TaskStatus | null {
   const value = formData.get("status");
+  return typeof value === "string" && STATUSES.includes(value as TaskStatus) ? (value as TaskStatus) : null;
+}
+
+function readOptionalStatus(formData: FormData, key: string): TaskStatus | null {
+  const value = formData.get(key);
   return typeof value === "string" && STATUSES.includes(value as TaskStatus) ? (value as TaskStatus) : null;
 }
 
@@ -1003,6 +1078,11 @@ function readPriority(formData: FormData): TaskPriority | null {
   return typeof value === "string" && PRIORITIES.includes(value as TaskPriority)
     ? (value as TaskPriority)
     : null;
+}
+
+function readOptionalPriority(formData: FormData, key: string): TaskPriority | null {
+  const value = formData.get(key);
+  return typeof value === "string" && PRIORITIES.includes(value as TaskPriority) ? (value as TaskPriority) : null;
 }
 
 function readTaskLevel(formData: FormData): TaskLevel | null {
@@ -1110,6 +1190,20 @@ function readNullableUuid(formData: FormData, key: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
     ? value
     : null;
+}
+
+function readBulkNullableUuid(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (value === "__none__") {
+    return null;
+  }
+
+  if (typeof value !== "string" || value.trim() === "") {
+    return undefined;
+  }
+
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ? value : undefined;
 }
 
 async function getProjectName(projectId: string) {
