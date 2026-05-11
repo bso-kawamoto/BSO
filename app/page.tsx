@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createCalendarEvent, createProject, createTask, logout } from "@/app/actions";
+import { createCalendarEvent, createProject, createTask, logout, updateTaskDetails, updateTaskStatus } from "@/app/actions";
 import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
@@ -44,6 +44,7 @@ export default async function Home({
   const sortedProjects = sortProjects(filteredProjects, visibleTasks, params?.sort);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
   const taskTemplateTitles = buildTaskTemplateTitles(tasks);
+  const unassignedProjectTasks = visibleTasks.filter((task) => !task.project_id);
 
   return (
     <main className="page">
@@ -291,11 +292,24 @@ export default async function Home({
             {sortedProjects.map((project) => (
               <ProjectCard key={project.id} project={project} tasks={visibleTasks.filter((task) => task.project_id === project.id)} />
             ))}
-            {!projectQuery && visibleTasks.some((task) => !task.project_id) ? (
-              <ProjectCard project={null} tasks={visibleTasks.filter((task) => !task.project_id)} />
-            ) : null}
             {sortedProjects.length === 0 ? <div className="empty">条件に合う案件がありません</div> : null}
           </div>
+          {!projectQuery && unassignedProjectTasks.length > 0 ? (
+            <section className="unassignedTaskPanel" aria-label="Tasks without project">
+              <div className="sectionHeader compactSectionHeader">
+                <div>
+                  <h3>案件なしタスク</h3>
+                  <p className="mutedText">まだ案件に紐づいていないタスクです。ここで修正やステータス更新ができます。</p>
+                </div>
+                <span className="countPill">{unassignedProjectTasks.length}件</span>
+              </div>
+              <div className="unassignedTaskList">
+                {unassignedProjectTasks.map((task) => (
+                  <EditableBoardTaskCard key={task.id} employees={employeeOptions} projects={visibleProjects} task={task} />
+                ))}
+              </div>
+            </section>
+          ) : null}
         </section>
       </div>
     </main>
@@ -587,6 +601,115 @@ function Summary({ label, value }: { label: string; value: number }) {
       <div className="summaryValue">{value}</div>
     </div>
   );
+}
+
+function EditableBoardTaskCard({ employees, projects, task }: { employees: Employee[]; projects: Project[]; task: OperationTask }) {
+  return (
+    <article className="task unassignedTaskCard">
+      <div className="taskTitle">
+        <span className="levelMark">{task.task_level}</span>
+        <span>{task.title}</span>
+      </div>
+      <div className="taskMeta">
+        <span className="tag">{task.status}</span>
+        <span className="tag">{task.category}</span>
+        <span className={`tag ${priorityClass(task.priority)}`}>{task.priority}</span>
+        <span>担当 {task.owner}</span>
+        <span>依頼者 {task.requested_by_name ?? "未設定"}</span>
+        <span>期日 {task.due_date ?? "未設定"}</span>
+      </div>
+      {task.memo ? <p className="taskMemo">{task.memo}</p> : null}
+      <form action={updateTaskStatus} className="inlineForm">
+        <input name="id" type="hidden" value={task.id} />
+        <select aria-label={`${task.title} のステータス`} name="status" defaultValue={task.status}>
+          {STATUSES.map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </select>
+        <button className="secondaryButton" type="submit">
+          更新
+        </button>
+      </form>
+      <details className="taskEditDetails">
+        <summary>内容を修正</summary>
+        <form action={updateTaskDetails} className="boardTaskEditForm">
+          <input name="id" type="hidden" value={task.id} />
+          <div className="field wideField">
+            <label htmlFor={`title-${task.id}`}>タスク名</label>
+            <input id={`title-${task.id}`} name="title" defaultValue={task.title} maxLength={120} required />
+          </div>
+          <div className="field">
+            <label htmlFor={`project-${task.id}`}>案件</label>
+            <select id={`project-${task.id}`} name="project_id" defaultValue={task.project_id ?? ""}>
+              <option value="">案件なし</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`category-${task.id}`}>カテゴリ</label>
+            <select id={`category-${task.id}`} name="category" defaultValue={task.category}>
+              {CATEGORIES.map((category) => (
+                <option key={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`status-${task.id}`}>状態</label>
+            <select id={`status-${task.id}`} name="status" defaultValue={task.status}>
+              {STATUSES.map((status) => (
+                <option key={status}>{status}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`priority-${task.id}`}>優先度</label>
+            <select id={`priority-${task.id}`} name="priority" defaultValue={task.priority}>
+              {PRIORITIES.map((priority) => (
+                <option key={priority}>{priority}</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor={`assignee-${task.id}`}>担当者</label>
+            <EmployeeSelect id={`assignee-${task.id}`} employees={employees} name="assignee_id" defaultValue={task.assignee_id ?? ""} />
+          </div>
+          <div className="field">
+            <label htmlFor={`requester-${task.id}`}>依頼者</label>
+            <EmployeeSelect id={`requester-${task.id}`} employees={employees} includePresident name="requested_by_id" defaultValue={getRequesterDefaultValue(task)} />
+          </div>
+          <div className="field">
+            <label htmlFor={`due-${task.id}`}>期日</label>
+            <input id={`due-${task.id}`} name="due_date" type="date" defaultValue={task.due_date ?? ""} />
+          </div>
+          <div className="field memoField">
+            <label htmlFor={`memo-${task.id}`}>進捗メモ</label>
+            <textarea id={`memo-${task.id}`} name="memo" rows={3} defaultValue={task.memo ?? ""} maxLength={1000} />
+          </div>
+          <button className="button" type="submit">
+            保存
+          </button>
+        </form>
+      </details>
+    </article>
+  );
+}
+
+function getRequesterDefaultValue(task: OperationTask) {
+  if (task.requested_by_id) {
+    return task.requested_by_id;
+  }
+
+  return task.requested_by_name === "社長" ? "__president__" : "";
+}
+
+function priorityClass(priority: OperationTask["priority"]) {
+  if (priority === PRIORITIES[2]) return "priorityHigh";
+  if (priority === PRIORITIES[1]) return "priorityMedium";
+  return "priorityLow";
 }
 
 function ProjectCard({ project, tasks }: { project: Project | null; tasks: OperationTask[] }) {

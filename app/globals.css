@@ -576,6 +576,40 @@ a {
   background: var(--surface);
 }
 
+.unassignedTaskPanel {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.compactSectionHeader {
+  margin-bottom: 0;
+}
+
+.unassignedTaskList {
+  display: grid;
+  gap: 12px;
+}
+
+.unassignedTaskCard {
+  background: #fbfdff;
+}
+
+.countPill {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .taskTitle {
   display: grid;
   gap: 6px;
