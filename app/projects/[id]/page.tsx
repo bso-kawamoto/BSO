@@ -538,9 +538,11 @@ function DetailTaskCard({
           <label htmlFor={`task-memo-${task.id}`}>進捗メモ</label>
           <textarea id={`task-memo-${task.id}`} name="memo" defaultValue={task.memo ?? ""} rows={2} maxLength={1000} />
         </div>
-        <button className="smallButton" type="submit">
-          保存
-        </button>
+        <div className="detailTaskActions">
+          <button className="smallButton" type="submit">
+            保存
+          </button>
+        </div>
       </form>
       <div className="taskMeta">
         {task.due_date ? <span>{getDueLabel(task.due_date, state)}</span> : <span>期限 未設定</span>}
@@ -549,7 +551,7 @@ function DetailTaskCard({
         <span>{task.category}</span>
       </div>
       {task.memo ? <p className="taskMemo">{task.memo}</p> : null}
-      <form action={deleteProjectTask} className="deleteForm">
+      <form action={deleteProjectTask} className="deleteForm detailDeleteForm">
         <input type="hidden" name="project_id" value={projectId} />
         <input type="hidden" name="id" value={task.id} />
         <button className="dangerButton" type="submit">

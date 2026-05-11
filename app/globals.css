@@ -1304,7 +1304,18 @@ a {
 }
 
 .memoField {
-  grid-column: 1 / -2;
+  grid-column: 1 / -1;
+}
+
+.detailTaskActions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.detailTaskActions .smallButton,
+.detailDeleteForm .dangerButton {
+  min-width: 150px;
 }
 
 .taskMemo {
