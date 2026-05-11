@@ -173,6 +173,63 @@ export async function updateProjectDetails(formData: FormData) {
   redirect(`/projects/${id}?project=updated`);
 }
 
+export async function updateProjectManagement(formData: FormData) {
+  const id = readNullableUuid(formData, "project_id");
+  const name = readText(formData, "project_name");
+  const dueDate = readDate(formData, "project_due_date", false);
+
+  if (!id || !name) {
+    redirect("/admin?projectUpdate=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect("/admin?projectUpdate=missing-env");
+  }
+
+  const { error } = await supabase
+    .from("projects")
+    .update({
+      name,
+      due_date: dueDate
+    })
+    .eq("id", id);
+
+  if (error) {
+    console.error("Failed to update project management:", error.message);
+    redirect("/admin?projectUpdate=error");
+  }
+
+  revalidateProjectViews(id);
+  redirect("/admin?projectUpdate=success");
+}
+
+export async function toggleProjectArchiveManagement(formData: FormData) {
+  const id = readNullableUuid(formData, "project_id");
+  const shouldArchive = formData.get("archive") === "true";
+
+  if (!id) {
+    redirect("/admin?projectUpdate=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect("/admin?projectUpdate=missing-env");
+  }
+
+  const { error } = await supabase.from("projects").update({ is_archived: shouldArchive }).eq("id", id);
+
+  if (error) {
+    console.error("Failed to toggle project archive:", error.message);
+    redirect("/admin?projectUpdate=error");
+  }
+
+  revalidateProjectViews(id);
+  redirect(shouldArchive ? "/admin?projectUpdate=archived" : "/admin?projectUpdate=restored");
+}
+
 export async function archiveProject(formData: FormData) {
   const id = readNullableUuid(formData, "project_id");
 

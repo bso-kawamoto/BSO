@@ -1,6 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createRegularTask, deleteRegularTask, deleteTask, logout, sendTeamsDueAlert, updateTaskManagement } from "@/app/actions";
+import {
+  createRegularTask,
+  deleteRegularTask,
+  deleteTask,
+  logout,
+  sendTeamsDueAlert,
+  toggleProjectArchiveManagement,
+  updateProjectManagement,
+  updateTaskManagement
+} from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { getEmployees, getProjects, getRegularTasks, getTasks } from "@/lib/tasks";
@@ -20,7 +29,18 @@ import {
 export default async function AdminPage({
   searchParams
 }: {
-  searchParams?: Promise<{ assignee?: string; count?: string; deleted?: string; project?: string; q?: string; regular?: string; status?: string; teams?: string; updated?: string }>;
+  searchParams?: Promise<{
+    assignee?: string;
+    count?: string;
+    deleted?: string;
+    project?: string;
+    projectUpdate?: string;
+    q?: string;
+    regular?: string;
+    status?: string;
+    teams?: string;
+    updated?: string;
+  }>;
 }) {
   const params = await searchParams;
   const [tasks, projects, employees, regularTasks] = await Promise.all([getTasks(), getProjects(true), getEmployees(), getRegularTasks()]);
@@ -35,7 +55,7 @@ export default async function AdminPage({
   }
 
   const manager = viewer.kind === "boss" ? MANAGERS[0] : MANAGERS[1];
-  const notice = getAdminNotice(params?.updated, params?.deleted, params?.teams, params?.count, params?.regular);
+  const notice = getAdminNotice(params?.updated, params?.deleted, params?.teams, params?.count, params?.regular, params?.projectUpdate);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
   const filteredTasks = filterAdminTasks(tasks, params);
   const visibleTasks = filteredTasks.slice(0, 40);
@@ -75,6 +95,14 @@ export default async function AdminPage({
             </form>
           </div>
           {notice ? <p className={`notice ${notice.kind}`}>{notice.message}</p> : null}
+          <details className="panel projectManagementPanel">
+            <summary>案件管理</summary>
+            <div className="projectManagementList">
+              {projects.map((project) => (
+                <ProjectManagementRow key={project.id} project={project} />
+              ))}
+            </div>
+          </details>
           <form className="adminFilterForm">
             <div className="field">
               <label htmlFor="admin-q">検索</label>
@@ -172,6 +200,39 @@ export default async function AdminPage({
         </section>
       </div>
     </main>
+  );
+}
+
+function ProjectManagementRow({ project }: { project: Project }) {
+  return (
+    <article className="projectManagementRow">
+      <form action={updateProjectManagement} className="projectManagementForm">
+        <input type="hidden" name="project_id" value={project.id} />
+        <div className="field">
+          <label htmlFor={`project-name-${project.id}`}>案件名</label>
+          <input id={`project-name-${project.id}`} name="project_name" defaultValue={project.name} maxLength={120} required />
+        </div>
+        <div className="field">
+          <label htmlFor={`project-due-${project.id}`}>期日</label>
+          <input id={`project-due-${project.id}`} name="project_due_date" type="date" defaultValue={project.due_date ?? ""} />
+        </div>
+        <button className="smallButton" type="submit">
+          保存
+        </button>
+      </form>
+      <div className="projectManagementActions">
+        <Link className="detailLink" href={`/projects/${project.id}`}>
+          詳細
+        </Link>
+        <form action={toggleProjectArchiveManagement}>
+          <input type="hidden" name="project_id" value={project.id} />
+          <input type="hidden" name="archive" value={project.is_archived ? "false" : "true"} />
+          <button className={project.is_archived ? "secondaryButton" : "dangerButton"} type="submit">
+            {project.is_archived ? "戻す" : "アーカイブ"}
+          </button>
+        </form>
+      </div>
+    </article>
   );
 }
 
@@ -351,7 +412,23 @@ function filterAdminTasks(
   });
 }
 
-function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string, regular?: string) {
+function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string, regular?: string, projectUpdate?: string) {
+  if (projectUpdate === "success") {
+    return { kind: "noticeSuccess", message: "案件を更新しました。" };
+  }
+
+  if (projectUpdate === "archived") {
+    return { kind: "noticeSuccess", message: "案件をアーカイブしました。" };
+  }
+
+  if (projectUpdate === "restored") {
+    return { kind: "noticeSuccess", message: "案件のアーカイブを解除しました。" };
+  }
+
+  if (projectUpdate === "invalid" || projectUpdate === "missing-env" || projectUpdate === "error") {
+    return { kind: "noticeError", message: "案件の更新に失敗しました。入力内容とSupabase設定を確認してください。" };
+  }
+
   if (regular === "success") {
     return { kind: "noticeSuccess", message: "レギュラー業務を追加しました。" };
   }

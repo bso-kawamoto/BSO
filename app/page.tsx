@@ -20,7 +20,7 @@ import {
 export default async function Home({
   searchParams
 }: {
-  searchParams?: Promise<{ created?: string; month?: string; sort?: string; updated?: string; project?: string; schedule?: string }>;
+  searchParams?: Promise<{ created?: string; month?: string; q?: string; sort?: string; updated?: string; project?: string; schedule?: string }>;
 }) {
   const params = await searchParams;
   const [calendarEvents, employees, projects, tasks] = await Promise.all([getCalendarEvents(), getEmployees(), getProjects(), getTasks()]);
@@ -39,7 +39,9 @@ export default async function Home({
   const highPriority = visibleTasks.filter((task) => task.priority === PRIORITIES[2]);
   const dueSoon = visibleTasks.filter((task) => task.due_date).slice(0, 4);
   const notice = getNotice(params?.created, params?.updated, params?.project, params?.schedule);
-  const sortedProjects = sortProjects(visibleProjects, visibleTasks, params?.sort);
+  const projectQuery = params?.q?.trim() ?? "";
+  const filteredProjects = filterProjectsByQuery(visibleProjects, projectQuery);
+  const sortedProjects = sortProjects(filteredProjects, visibleTasks, params?.sort);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
   const taskTemplateTitles = buildTaskTemplateTitles(tasks);
 
@@ -260,29 +262,39 @@ export default async function Home({
               <h2>案件別タスク</h2>
               <p className="mutedText">期日、未完了数、進捗遅れで並び替えできます。</p>
             </div>
-            <div className="sortLinks">
-              <Link className={params?.sort ? "sortLink" : "sortLink sortLinkActive"} href="/">
+            <div className="projectTools">
+              <form className="projectSearchForm">
+                <label className="srOnly" htmlFor="project-search">案件検索</label>
+                <input id="project-search" name="q" defaultValue={projectQuery} placeholder="案件名で検索" />
+                {params?.sort ? <input type="hidden" name="sort" value={params.sort} /> : null}
+                <button className="secondaryButton" type="submit">
+                  検索
+                </button>
+              </form>
+              <div className="sortLinks">
+              <Link className={params?.sort ? "sortLink" : "sortLink sortLinkActive"} href={projectQuery ? `/?q=${encodeURIComponent(projectQuery)}` : "/"}>
                 標準
               </Link>
-              <Link className={params?.sort === "due" ? "sortLink sortLinkActive" : "sortLink"} href="/?sort=due">
+              <Link className={params?.sort === "due" ? "sortLink sortLinkActive" : "sortLink"} href={`/?sort=due${projectQuery ? `&q=${encodeURIComponent(projectQuery)}` : ""}`}>
                 期日順
               </Link>
-              <Link className={params?.sort === "open" ? "sortLink sortLinkActive" : "sortLink"} href="/?sort=open">
+              <Link className={params?.sort === "open" ? "sortLink sortLinkActive" : "sortLink"} href={`/?sort=open${projectQuery ? `&q=${encodeURIComponent(projectQuery)}` : ""}`}>
                 未完了順
               </Link>
-              <Link className={params?.sort === "slow" ? "sortLink sortLinkActive" : "sortLink"} href="/?sort=slow">
+              <Link className={params?.sort === "slow" ? "sortLink sortLinkActive" : "sortLink"} href={`/?sort=slow${projectQuery ? `&q=${encodeURIComponent(projectQuery)}` : ""}`}>
                 遅れ順
               </Link>
+              </div>
             </div>
           </div>
           <div className="projectBoard">
             {sortedProjects.map((project) => (
               <ProjectCard key={project.id} project={project} tasks={visibleTasks.filter((task) => task.project_id === project.id)} />
             ))}
-            {visibleTasks.some((task) => !task.project_id) ? (
+            {!projectQuery && visibleTasks.some((task) => !task.project_id) ? (
               <ProjectCard project={null} tasks={visibleTasks.filter((task) => !task.project_id)} />
             ) : null}
-            {visibleProjects.length === 0 && visibleTasks.length === 0 ? <div className="empty">表示できる案件・タスクがありません</div> : null}
+            {sortedProjects.length === 0 ? <div className="empty">条件に合う案件がありません</div> : null}
           </div>
         </section>
       </div>
@@ -316,6 +328,15 @@ function filterProjectsForViewer(projects: Project[], tasks: OperationTask[], ev
 
 function buildTaskTemplateTitles(tasks: OperationTask[]) {
   return [...new Set(tasks.map((task) => task.title).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja")).slice(0, 80);
+}
+
+function filterProjectsByQuery(projects: Project[], query: string) {
+  if (!query) {
+    return projects;
+  }
+
+  const normalized = query.toLowerCase();
+  return projects.filter((project) => project.name.toLowerCase().includes(normalized));
 }
 
 function sortProjects(projects: Project[], tasks: OperationTask[], sort?: string) {
