@@ -4,6 +4,18 @@ export const PRIORITIES = ["低", "中", "高"] as const;
 export const MANAGERS = ["社長", "河本"] as const;
 export const TASK_LEVELS = ["中タスク", "小タスク"] as const;
 export const MIDDLE_TASK_TEMPLATES = ["企画", "広報", "顧客対応", "運営", "管理", "製作", "調整", "システム", "当日対応", "振り返り"] as const;
+export const MIDDLE_TASK_CATEGORY_MAP = {
+  企画: "イベント",
+  広報: "広報",
+  顧客対応: "チーム",
+  運営: "大会",
+  管理: "管理部",
+  製作: "広報",
+  調整: "イベント",
+  システム: "システム",
+  当日対応: "大会",
+  振り返り: "管理部"
+} as const satisfies Record<(typeof MIDDLE_TASK_TEMPLATES)[number], TaskCategory>;
 export const EMPLOYEE_NAMES = ["河本", "高橋", "大鋸", "松本", "安藤", "草間", "上野", "平賀", "宮田", "天木", "花里", "大橋"] as const;
 
 export type TaskStatus = (typeof STATUSES)[number];

@@ -9,6 +9,7 @@ import { sendTeamsDueAlerts, sendTeamsTaskAssignedAlert } from "@/lib/teams-noti
 import { getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
+  MIDDLE_TASK_CATEGORY_MAP,
   MANAGERS,
   MIDDLE_TASK_TEMPLATES,
   PRIORITIES,
@@ -118,7 +119,7 @@ export async function createProject(formData: FormData) {
       assignee_id: null,
       task_level: "中タスク" as const,
       title,
-      category: "管理部" as const,
+      category: MIDDLE_TASK_CATEGORY_MAP[title],
       status: "未着手" as const,
       priority: "中" as const,
       owner: "未割当",

@@ -35,7 +35,7 @@ select
   null,
   '中タスク',
   template.title,
-  '管理部',
+  template.category,
   '未着手',
   '中',
   '未割当',
@@ -45,17 +45,17 @@ select
 from public.projects
 cross join (
   values
-    ('企画'),
-    ('広報'),
-    ('顧客対応'),
-    ('運営'),
-    ('管理'),
-    ('製作'),
-    ('調整'),
-    ('システム'),
-    ('当日対応'),
-    ('振り返り')
-) as template(title)
+    ('企画', 'イベント'),
+    ('広報', '広報'),
+    ('顧客対応', 'チーム'),
+    ('運営', '大会'),
+    ('管理', '管理部'),
+    ('製作', '広報'),
+    ('調整', 'イベント'),
+    ('システム', 'システム'),
+    ('当日対応', '大会'),
+    ('振り返り', '管理部')
+) as template(title, category)
 where not exists (
   select 1
   from public.operation_tasks existing

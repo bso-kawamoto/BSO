@@ -169,3 +169,4 @@ node scripts/create-auth-users.mjs
 - `operation_tasks.requested_by_id` と `operation_tasks.requested_by_name` を使うため、`supabase/migrations/013_add_task_requester.sql` をSupabase SQL Editorで適用してください。
 - `regular_tasks` を使うため、`supabase/migrations/014_add_regular_tasks.sql` をSupabase SQL Editorで適用してください。
 - 新カテゴリと標準中タスクを使うため、`supabase/migrations/015_update_task_categories.sql` をSupabase SQL Editorで適用してください。既存案件にも不足分の標準中タスクを追加します。
+- 標準中タスクのカテゴリ補正には、`supabase/migrations/016_fix_standard_middle_task_categories.sql` をSupabase SQL Editorで適用してください。
