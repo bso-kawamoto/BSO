@@ -159,5 +159,6 @@ node scripts/create-auth-users.mjs
 - 完了になったタスクは通常の案件内リストから分離し、案件ごとの「完了済みタスク」にまとまります。
 - タスク名入力欄では、過去に登録したタスク名を候補として呼び出せます。同じ作業を再登録する場合は候補から選択してください。
 - タスクには「依頼者」を設定できます。誰から振られたタスクかを、ボード、案件詳細、管理画面で確認できます。
+- 既存タスクは「内容を修正」から後から案件を選び直せます。案件なしで登録したタスクも、あとから案件に紐づけできます。
 - カレンダーはURLに月指定がない場合、実際の当月を先頭に表示します。
 - `operation_tasks.requested_by_id` と `operation_tasks.requested_by_name` を使うため、`supabase/migrations/013_add_task_requester.sql` をSupabase SQL Editorで適用してください。

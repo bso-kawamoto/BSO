@@ -523,6 +523,7 @@ export async function updateTaskDetails(formData: FormData) {
   const status = readStatus(formData);
   const priority = readPriority(formData);
   const dueDate = readOptionalDate(formData);
+  const projectId = readNullableUuid(formData, "project_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requesterId = readNullableUuid(formData, "requested_by_id");
   const memo = readLongText(formData, "memo");
@@ -552,6 +553,7 @@ export async function updateTaskDetails(formData: FormData) {
       status,
       priority,
       memo,
+      project_id: projectId,
       due_date: dueDate
     })
     .eq("id", id);
@@ -565,6 +567,9 @@ export async function updateTaskDetails(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/employees");
   revalidatePath("/today");
+  if (projectId) {
+    revalidatePath(`/projects/${projectId}`);
+  }
   redirect("/?updated=success");
 }
 

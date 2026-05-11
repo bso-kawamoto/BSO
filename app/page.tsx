@@ -273,10 +273,16 @@ export default async function Home({
           </div>
           <div className="projectBoard">
             {sortedProjects.map((project) => (
-              <ProjectCard employees={employeeOptions} key={project.id} project={project} tasks={visibleTasks.filter((task) => task.project_id === project.id)} />
+              <ProjectCard
+                employees={employeeOptions}
+                key={project.id}
+                project={project}
+                projects={projects}
+                tasks={visibleTasks.filter((task) => task.project_id === project.id)}
+              />
             ))}
             {visibleTasks.some((task) => !task.project_id) ? (
-              <ProjectCard employees={employeeOptions} project={null} tasks={visibleTasks.filter((task) => !task.project_id)} />
+              <ProjectCard employees={employeeOptions} project={null} projects={projects} tasks={visibleTasks.filter((task) => !task.project_id)} />
             ) : null}
             {visibleProjects.length === 0 && visibleTasks.length === 0 ? <div className="empty">表示できる案件・タスクがありません</div> : null}
           </div>
@@ -561,7 +567,7 @@ function Summary({ label, value }: { label: string; value: number }) {
   );
 }
 
-function TaskCard({ employees, task }: { employees: Employee[]; task: OperationTask }) {
+function TaskCard({ employees, projects, task }: { employees: Employee[]; projects: Project[]; task: OperationTask }) {
   const priorityClass = task.priority === PRIORITIES[2] ? "priorityHigh" : task.priority === PRIORITIES[1] ? "priorityMedium" : "priorityLow";
 
   return (
@@ -596,6 +602,17 @@ function TaskCard({ employees, task }: { employees: Employee[]; task: OperationT
           <div className="field wideField">
             <label htmlFor={`board-task-title-${task.id}`}>タスク名</label>
             <input id={`board-task-title-${task.id}`} name="title" defaultValue={task.title} maxLength={120} required />
+          </div>
+          <div className="field">
+            <label htmlFor={`board-task-project-${task.id}`}>案件</label>
+            <select id={`board-task-project-${task.id}`} name="project_id" defaultValue={task.project_id ?? ""}>
+              <option value="">案件なし</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label htmlFor={`board-task-category-${task.id}`}>カテゴリ</label>
@@ -660,7 +677,7 @@ function TaskCard({ employees, task }: { employees: Employee[]; task: OperationT
   );
 }
 
-function ProjectCard({ employees, project, tasks }: { employees: Employee[]; project: Project | null; tasks: OperationTask[] }) {
+function ProjectCard({ employees, project, projects, tasks }: { employees: Employee[]; project: Project | null; projects: Project[]; tasks: OperationTask[] }) {
   const openTasks = tasks.filter((task) => task.status !== STATUSES[3]);
   const completedTasks = tasks.filter((task) => task.status === STATUSES[3]);
   const middleTasks = openTasks.filter((task) => task.task_level === TASK_LEVELS[0] || !task.parent_task_id);
@@ -694,10 +711,10 @@ function ProjectCard({ employees, project, tasks }: { employees: Employee[]; pro
 
             return (
               <div className="taskGroup" key={task.id}>
-                <TaskCard employees={employees} task={task} />
+                <TaskCard employees={employees} projects={projects} task={task} />
                 <div className="childTasks">
                   {children.map((child) => (
-                    <TaskCard employees={employees} key={child.id} task={child} />
+                    <TaskCard employees={employees} key={child.id} projects={projects} task={child} />
                   ))}
                 </div>
               </div>
@@ -709,7 +726,7 @@ function ProjectCard({ employees, project, tasks }: { employees: Employee[]; pro
             <summary>完了済みタスク {completedTasks.length}件</summary>
             <div className="completedTaskList">
               {completedTasks.map((task) => (
-                <TaskCard employees={employees} key={task.id} task={task} />
+                <TaskCard employees={employees} key={task.id} projects={projects} task={task} />
               ))}
             </div>
           </details>
