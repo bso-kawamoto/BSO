@@ -20,7 +20,7 @@ import {
 export default async function AdminPage({
   searchParams
 }: {
-  searchParams?: Promise<{ count?: string; deleted?: string; regular?: string; teams?: string; updated?: string }>;
+  searchParams?: Promise<{ assignee?: string; count?: string; deleted?: string; project?: string; q?: string; regular?: string; status?: string; teams?: string; updated?: string }>;
 }) {
   const params = await searchParams;
   const [tasks, projects, employees, regularTasks] = await Promise.all([getTasks(), getProjects(true), getEmployees(), getRegularTasks()]);
@@ -37,6 +37,9 @@ export default async function AdminPage({
   const manager = viewer.kind === "boss" ? MANAGERS[0] : MANAGERS[1];
   const notice = getAdminNotice(params?.updated, params?.deleted, params?.teams, params?.count, params?.regular);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
+  const filteredTasks = filterAdminTasks(tasks, params);
+  const visibleTasks = filteredTasks.slice(0, 40);
+  const allMiddleTasks = tasks.filter((task) => task.task_level === TASK_LEVELS[0]);
 
   return (
     <main className="page">
@@ -63,7 +66,7 @@ export default async function AdminPage({
           <div className="sectionHeader">
             <div>
               <h1 className="adminTitle">タスク管理</h1>
-              <p className="mutedText">社長と河本だけが開ける管理画面です。担当者、状態、カテゴリ、優先度、期限をまとめて更新できます。</p>
+              <p className="mutedText">表示件数を絞って軽くしています。検索や絞り込みで必要なタスクだけ編集してください。</p>
             </div>
             <form action={sendTeamsDueAlert}>
               <button className="secondaryButton" type="submit">
@@ -72,6 +75,52 @@ export default async function AdminPage({
             </form>
           </div>
           {notice ? <p className={`notice ${notice.kind}`}>{notice.message}</p> : null}
+          <form className="adminFilterForm">
+            <div className="field">
+              <label htmlFor="admin-q">検索</label>
+              <input id="admin-q" name="q" defaultValue={params?.q ?? ""} placeholder="タスク名・メモ" />
+            </div>
+            <div className="field">
+              <label htmlFor="admin-project">案件</label>
+              <select id="admin-project" name="project" defaultValue={params?.project ?? ""}>
+                <option value="">すべて</option>
+                <option value="none">案件なし</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="admin-assignee">担当者</label>
+              <select id="admin-assignee" name="assignee" defaultValue={params?.assignee ?? ""}>
+                <option value="">すべて</option>
+                <option value="none">未割当</option>
+                {employeeOptions.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="admin-status">状態</label>
+              <select id="admin-status" name="status" defaultValue={params?.status ?? "open"}>
+                <option value="open">未完了</option>
+                <option value="">すべて</option>
+                {STATUSES.map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </select>
+            </div>
+            <button className="button" type="submit">
+              絞り込み
+            </button>
+            <Link className="secondaryButton adminResetLink" href="/admin">
+              解除
+            </Link>
+          </form>
           <section className="panel regularTaskPanel">
             <h2>レギュラー業務</h2>
             <form action={createRegularTask} className="regularTaskForm">
@@ -106,16 +155,19 @@ export default async function AdminPage({
             </div>
           </section>
           <div className="adminList">
-            {tasks.map((task) => (
+            <p className="mutedText">表示 {visibleTasks.length}件 / 該当 {filteredTasks.length}件 / 全体 {tasks.length}件</p>
+            {visibleTasks.map((task) => (
               <AdminTaskRow
+                allMiddleTasks={allMiddleTasks}
                 employees={employeeOptions}
                 key={task.id}
                 manager={manager}
                 projects={projects}
                 task={task}
-                tasks={tasks}
               />
             ))}
+            {filteredTasks.length > visibleTasks.length ? <div className="empty">該当件数が多いため先頭40件だけ表示しています。検索条件を追加してください。</div> : null}
+            {filteredTasks.length === 0 ? <div className="empty">該当するタスクはありません</div> : null}
           </div>
         </section>
       </div>
@@ -144,19 +196,21 @@ function RegularTaskRow({ employees, task }: { employees: Employee[]; task: Regu
 }
 
 function AdminTaskRow({
+  allMiddleTasks,
   manager,
   employees,
   projects,
-  task,
-  tasks
+  task
 }: {
+  allMiddleTasks: OperationTask[];
   manager: Manager;
   employees: Employee[];
   projects: Project[];
   task: OperationTask;
-  tasks: OperationTask[];
 }) {
-  const parentCandidates = tasks.filter((candidate) => candidate.id !== task.id && candidate.task_level === TASK_LEVELS[0]);
+  const parentCandidates = allMiddleTasks.filter(
+    (candidate) => candidate.id !== task.id && (candidate.project_id === task.project_id || (!candidate.project_id && !task.project_id))
+  );
 
   return (
     <article className="adminRow">
@@ -269,6 +323,32 @@ function AdminTaskRow({
 
 function getRequesterDefaultValue(task: OperationTask) {
   return task.requested_by_id ?? (task.requested_by_name === "社長" ? "__president__" : "");
+}
+
+function filterAdminTasks(
+  tasks: OperationTask[],
+  params?: { assignee?: string; project?: string; q?: string; status?: string }
+) {
+  const query = params?.q?.trim().toLowerCase();
+  const status = params?.status ?? "open";
+
+  return tasks.filter((task) => {
+    if (query) {
+      const haystack = [task.title, task.memo, task.owner, task.requested_by_name, task.category].filter(Boolean).join(" ").toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+
+    if (params?.project === "none" && task.project_id) return false;
+    if (params?.project && params.project !== "none" && task.project_id !== params.project) return false;
+
+    if (params?.assignee === "none" && task.assignee_id) return false;
+    if (params?.assignee && params.assignee !== "none" && task.assignee_id !== params.assignee) return false;
+
+    if (status === "open" && task.status === "完了") return false;
+    if (status && status !== "open" && task.status !== status) return false;
+
+    return true;
+  });
 }
 
 function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string, regular?: string) {

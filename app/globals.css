@@ -744,6 +744,24 @@ a {
   margin-bottom: 16px;
 }
 
+.adminFilterForm {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) repeat(3, minmax(150px, 0.8fr)) auto auto;
+  gap: 10px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.adminResetLink {
+  display: inline-grid;
+  min-height: 44px;
+  place-items: center;
+}
+
 .regularTaskForm {
   display: grid;
   grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1fr) minmax(260px, 1.2fr) auto;
@@ -1592,6 +1610,7 @@ a {
   }
 
   .adminRow,
+  .adminFilterForm,
   .adminForm,
   .calendarHero,
   .calendarLayout,
