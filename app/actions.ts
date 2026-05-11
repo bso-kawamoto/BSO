@@ -782,6 +782,64 @@ export async function deleteProjectCalendarEvent(formData: FormData) {
   redirect(`/projects/${projectId}?schedule=deleted`);
 }
 
+export async function createRegularTask(formData: FormData) {
+  const assigneeId = readNullableUuid(formData, "assignee_id");
+  const title = readText(formData, "title");
+  const memo = readLongText(formData, "memo");
+
+  if (!assigneeId || !title) {
+    redirect("/admin?regular=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect("/admin?regular=missing-env");
+  }
+
+  const { error } = await supabase.from("regular_tasks").insert({
+    assignee_id: assigneeId,
+    title,
+    memo
+  });
+
+  if (error) {
+    console.error("Failed to create regular task:", error.message);
+    redirect("/admin?regular=error");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/employees");
+  revalidatePath("/today");
+  redirect("/admin?regular=success");
+}
+
+export async function deleteRegularTask(formData: FormData) {
+  const id = readText(formData, "id");
+
+  if (!id) {
+    redirect("/admin?regular=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect("/admin?regular=missing-env");
+  }
+
+  const { error } = await supabase.from("regular_tasks").update({ is_active: false }).eq("id", id);
+
+  if (error) {
+    console.error("Failed to delete regular task:", error.message);
+    redirect("/admin?regular=error");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/employees");
+  revalidatePath("/today");
+  redirect("/admin?regular=deleted");
+}
+
 export async function deleteTask(formData: FormData) {
   const manager = readManager(formData);
   const id = readText(formData, "id");

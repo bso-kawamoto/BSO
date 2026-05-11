@@ -4,8 +4,8 @@ import { logout } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
 import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
 import { filterEmployeesForViewer } from "@/lib/task-visibility";
-import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
-import { STATUSES, type CalendarEvent, type Employee, type OperationTask, type Project } from "@/lib/types";
+import { getCalendarEvents, getEmployees, getProjects, getRegularTasks, getTasks } from "@/lib/tasks";
+import { STATUSES, type CalendarEvent, type Employee, type OperationTask, type Project, type RegularTask } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export default async function EmployeesPage({
   searchParams?: Promise<{ sort?: string }>;
 }) {
   const params = await searchParams;
-  const [employees, tasks, events, projects] = await Promise.all([getEmployees(), getTasks(), getCalendarEvents(), getProjects(true)]);
+  const [employees, tasks, events, projects, regularTasks] = await Promise.all([getEmployees(), getTasks(), getCalendarEvents(), getProjects(true), getRegularTasks()]);
   const viewer = await getCurrentViewer(employees);
 
   if (!viewer) {
@@ -23,7 +23,7 @@ export default async function EmployeesPage({
   }
 
   const projectNames = buildProjectNameMap(projects);
-  const cards = buildEmployeeCards(filterEmployeesForViewer(employees, viewer), tasks, events);
+  const cards = buildEmployeeCards(filterEmployeesForViewer(employees, viewer), tasks, events, regularTasks);
   const currentSort = params?.sort ?? "name";
   const sortedCards = sortEmployeeCards(cards, currentSort, viewer.employee?.id);
 
@@ -75,7 +75,7 @@ export default async function EmployeesPage({
           {!viewer.isAdmin ? <p className="notice noticeSuccess">本人分だけを表示しています。</p> : null}
 
           <div className="employeeGrid">
-            {sortedCards.map(({ completedTasks, employee, openTasks, overdue, soon, upcomingEvents }) => (
+            {sortedCards.map(({ completedTasks, employee, openTasks, overdue, regularTasks: employeeRegularTasks, soon, upcomingEvents }) => (
               <article className="employeeCard" key={employee.id}>
                 <header>
                   <h2>{employee.name}</h2>
@@ -87,6 +87,17 @@ export default async function EmployeesPage({
                   <Summary label="近日期限" value={soon.length} />
                 </div>
                 <div className="miniList">
+                  {employeeRegularTasks.length > 0 ? (
+                    <div className="regularTaskBlock">
+                      <h3>レギュラー業務</h3>
+                      {employeeRegularTasks.map((task) => (
+                        <div className="regularTaskMini" key={task.id}>
+                          <strong>{task.title}</strong>
+                          {task.memo ? <p>{task.memo}</p> : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   {openTasks.map((task) => (
                     <EmployeeTaskRow key={task.id} projectName={getProjectName(projectNames, task.project_id)} task={task} />
                   ))}
@@ -141,7 +152,13 @@ function EmployeeTaskRow({ projectName, task }: { projectName: string; task: Ope
   return (
     <div className="miniRow employeeTaskRow">
       <div className="employeeTaskMain">
-        <strong>{task.title}</strong>
+        {task.project_id ? (
+          <Link href={`/projects/${task.project_id}#task-${task.id}`}>
+            <strong>{task.title}</strong>
+          </Link>
+        ) : (
+          <strong>{task.title}</strong>
+        )}
         <div className="employeeTaskMeta">
           <span>{projectName}</span>
           <span>{task.status}</span>
@@ -166,7 +183,7 @@ function getProjectName(projectNames: Map<string, string>, projectId: string | n
   return projectNames.get(projectId) ?? "案件不明";
 }
 
-function buildEmployeeCards(employees: Employee[], tasks: OperationTask[], events: CalendarEvent[]) {
+function buildEmployeeCards(employees: Employee[], tasks: OperationTask[], events: CalendarEvent[], regularTasks: RegularTask[]) {
   return employees.map((employee) => {
     const employeeTasks = tasks.filter((task) => task.assignee_id === employee.id);
     const openTasks = employeeTasks.filter((task) => task.status !== STATUSES[3]);
@@ -186,6 +203,7 @@ function buildEmployeeCards(employees: Employee[], tasks: OperationTask[], event
       completedTasks: completedTasks.sort(sortTasksByDueDate),
       openTasks: openTasks.sort(sortTasksByDueDate),
       overdue,
+      regularTasks: regularTasks.filter((task) => task.assignee_id === employee.id),
       soon,
       upcomingEvents
     };

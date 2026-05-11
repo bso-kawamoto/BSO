@@ -1,4 +1,4 @@
-import type { CalendarEvent, Employee, OperationTask } from "@/lib/types";
+import type { CalendarEvent, Employee, OperationTask, RegularTask } from "@/lib/types";
 
 export const sampleEmployees: Employee[] = [
   "河本",
@@ -112,6 +112,27 @@ export const sampleTasks: OperationTask[] = [
     requested_by_name: "社長",
     due_date: "2026-05-15",
     created_at: "2026-04-26T00:00:00.000Z",
+    updated_at: "2026-04-29T00:00:00.000Z"
+  }
+];
+
+export const sampleRegularTasks: RegularTask[] = [
+  {
+    id: "sample-regular-1",
+    assignee_id: "sample-employee-高橋",
+    title: "問い合わせ確認",
+    memo: "朝一で新規問い合わせと未返信を確認する。",
+    is_active: true,
+    created_at: "2026-04-29T00:00:00.000Z",
+    updated_at: "2026-04-29T00:00:00.000Z"
+  },
+  {
+    id: "sample-regular-2",
+    assignee_id: "sample-employee-安藤",
+    title: "パートさん進捗確認",
+    memo: "物販・日次作業の詰まりを確認する。",
+    is_active: true,
+    created_at: "2026-04-29T00:00:00.000Z",
     updated_at: "2026-04-29T00:00:00.000Z"
   }
 ];

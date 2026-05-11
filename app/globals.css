@@ -697,6 +697,48 @@ a {
   gap: 12px;
 }
 
+.regularTaskPanel {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.regularTaskForm {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1fr) minmax(260px, 1.2fr) auto;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.regularTaskList {
+  display: grid;
+  gap: 8px;
+}
+
+.regularTaskRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.regularTaskRow div {
+  display: grid;
+  gap: 4px;
+}
+
+.regularTaskRow span,
+.regularTaskRow p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .adminRow {
   display: grid;
   grid-template-columns: 1fr;
@@ -1187,6 +1229,12 @@ a {
 
 .detailTask {
   border-left: 5px solid var(--accent-soft);
+  scroll-margin-top: 18px;
+}
+
+.detailTask:target {
+  outline: 3px solid rgba(10, 47, 95, 0.18);
+  outline-offset: 3px;
 }
 
 .detailEditForm {
@@ -1389,6 +1437,42 @@ a {
   width: 100%;
 }
 
+.employeeTaskMain a:hover {
+  color: var(--accent);
+}
+
+.regularTaskBlock {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #eef6ff;
+}
+
+.regularTaskBlock h3 {
+  margin: 0;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.regularTaskMini {
+  display: grid;
+  gap: 4px;
+  padding: 9px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.regularTaskMini p,
+.regularTodayItem p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
 .employeeTaskMeta {
   display: flex;
   gap: 6px;
@@ -1434,7 +1518,7 @@ a {
 
 .todayGrid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
   margin-top: 24px;
   align-items: start;
@@ -1477,6 +1561,7 @@ a {
   .detailCreateGrid,
   .detailEditForm,
   .employeeGrid,
+  .regularTaskForm,
   .todayGrid {
     grid-template-columns: 1fr;
   }

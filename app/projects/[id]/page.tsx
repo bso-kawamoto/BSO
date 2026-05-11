@@ -453,7 +453,7 @@ function DetailTaskCard({
   const state = getDueState(task.due_date);
 
   return (
-    <article className={`task detailTask ${state ? `due-${state}` : ""}`}>
+    <article className={`task detailTask ${state ? `due-${state}` : ""}`} id={`task-${task.id}`}>
       <form action={updateProjectTask} className="detailEditForm">
         <input type="hidden" name="project_id" value={projectId} />
         <input type="hidden" name="id" value={task.id} />

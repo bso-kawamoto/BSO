@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
-import { sampleCalendarEvents, sampleEmployees, sampleProjects, sampleTasks } from "@/lib/sample-data";
-import type { CalendarEvent, Employee, OperationTask, Project } from "@/lib/types";
+import { sampleCalendarEvents, sampleEmployees, sampleProjects, sampleRegularTasks, sampleTasks } from "@/lib/sample-data";
+import type { CalendarEvent, Employee, OperationTask, Project, RegularTask } from "@/lib/types";
 
 export async function getCalendarEvents(): Promise<CalendarEvent[]> {
   const supabase = createClient();
@@ -131,6 +131,27 @@ export async function getTasks(): Promise<OperationTask[]> {
       requested_by_id: null,
       requested_by_name: null
     }));
+  }
+
+  return data ?? [];
+}
+
+export async function getRegularTasks(): Promise<RegularTask[]> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return sampleRegularTasks;
+  }
+
+  const { data, error } = await supabase
+    .from("regular_tasks")
+    .select("id,assignee_id,title,memo,is_active,created_at,updated_at")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to fetch regular tasks:", error.message);
+    return [];
   }
 
   return data ?? [];

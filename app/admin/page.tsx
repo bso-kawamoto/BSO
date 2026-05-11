@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { deleteTask, logout, sendTeamsDueAlert, updateTaskManagement } from "@/app/actions";
+import { createRegularTask, deleteRegularTask, deleteTask, logout, sendTeamsDueAlert, updateTaskManagement } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
-import { getEmployees, getProjects, getTasks } from "@/lib/tasks";
+import { getEmployees, getProjects, getRegularTasks, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
   MANAGERS,
@@ -13,18 +13,17 @@ import {
   type Employee,
   type Manager,
   type OperationTask,
-  type Project
+  type Project,
+  type RegularTask
 } from "@/lib/types";
 
 export default async function AdminPage({
   searchParams
 }: {
-  searchParams?: Promise<{ count?: string; deleted?: string; teams?: string; updated?: string }>;
+  searchParams?: Promise<{ count?: string; deleted?: string; regular?: string; teams?: string; updated?: string }>;
 }) {
   const params = await searchParams;
-  const tasks = await getTasks();
-  const projects = await getProjects(true);
-  const employees = await getEmployees();
+  const [tasks, projects, employees, regularTasks] = await Promise.all([getTasks(), getProjects(true), getEmployees(), getRegularTasks()]);
   const viewer = await getCurrentViewer(employees);
 
   if (!viewer) {
@@ -36,7 +35,7 @@ export default async function AdminPage({
   }
 
   const manager = viewer.kind === "boss" ? MANAGERS[0] : MANAGERS[1];
-  const notice = getAdminNotice(params?.updated, params?.deleted, params?.teams, params?.count);
+  const notice = getAdminNotice(params?.updated, params?.deleted, params?.teams, params?.count, params?.regular);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
 
   return (
@@ -73,6 +72,39 @@ export default async function AdminPage({
             </form>
           </div>
           {notice ? <p className={`notice ${notice.kind}`}>{notice.message}</p> : null}
+          <section className="panel regularTaskPanel">
+            <h2>レギュラー業務</h2>
+            <form action={createRegularTask} className="regularTaskForm">
+              <div className="field">
+                <label htmlFor="regular-assignee">担当者</label>
+                <select id="regular-assignee" name="assignee_id" required>
+                  <option value="">選択してください</option>
+                  {employeeOptions.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="regular-title">業務名</label>
+                <input id="regular-title" name="title" maxLength={120} placeholder="例: 問い合わせ確認" required />
+              </div>
+              <div className="field regularMemoField">
+                <label htmlFor="regular-memo">メモ</label>
+                <input id="regular-memo" name="memo" maxLength={1000} placeholder="例: 朝一で未返信を確認" />
+              </div>
+              <button className="button" type="submit">
+                追加
+              </button>
+            </form>
+            <div className="regularTaskList">
+              {regularTasks.map((task) => (
+                <RegularTaskRow employees={employees} key={task.id} task={task} />
+              ))}
+              {regularTasks.length === 0 ? <div className="empty">登録済みのレギュラー業務はありません</div> : null}
+            </div>
+          </section>
           <div className="adminList">
             {tasks.map((task) => (
               <AdminTaskRow
@@ -88,6 +120,26 @@ export default async function AdminPage({
         </section>
       </div>
     </main>
+  );
+}
+
+function RegularTaskRow({ employees, task }: { employees: Employee[]; task: RegularTask }) {
+  const assignee = employees.find((employee) => employee.id === task.assignee_id);
+
+  return (
+    <article className="regularTaskRow">
+      <div>
+        <strong>{task.title}</strong>
+        <span>{assignee?.name ?? "担当者不明"}</span>
+        {task.memo ? <p>{task.memo}</p> : null}
+      </div>
+      <form action={deleteRegularTask}>
+        <input type="hidden" name="id" value={task.id} />
+        <button className="dangerButton" type="submit">
+          削除
+        </button>
+      </form>
+    </article>
   );
 }
 
@@ -219,7 +271,23 @@ function getRequesterDefaultValue(task: OperationTask) {
   return task.requested_by_id ?? (task.requested_by_name === "社長" ? "__president__" : "");
 }
 
-function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string) {
+function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string, regular?: string) {
+  if (regular === "success") {
+    return { kind: "noticeSuccess", message: "レギュラー業務を追加しました。" };
+  }
+
+  if (regular === "deleted") {
+    return { kind: "noticeSuccess", message: "レギュラー業務を削除しました。" };
+  }
+
+  if (regular === "invalid") {
+    return { kind: "noticeError", message: "レギュラー業務の担当者と業務名を確認してください。" };
+  }
+
+  if (regular === "missing-env" || regular === "error") {
+    return { kind: "noticeError", message: "レギュラー業務の保存に失敗しました。Supabase設定を確認してください。" };
+  }
+
   if (teams === "sent") {
     return { kind: "noticeSuccess", message: `Teamsへ期限アラートを送信しました。対象 ${count ?? "0"} 件。` };
   }

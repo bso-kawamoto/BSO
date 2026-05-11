@@ -50,6 +50,16 @@ export type CalendarEvent = {
   updated_at: string;
 };
 
+export type RegularTask = {
+  id: string;
+  assignee_id: string;
+  title: string;
+  memo: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type OperationTask = {
   id: string;
   project_id: string | null;

@@ -3,12 +3,12 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { getCurrentViewer } from "@/lib/auth";
 import { filterTasksForViewer } from "@/lib/task-visibility";
-import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
+import { getCalendarEvents, getEmployees, getProjects, getRegularTasks, getTasks } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
 
 export default async function TodayPage() {
-  const [events, employees, projects, tasks] = await Promise.all([getCalendarEvents(), getEmployees(), getProjects(true), getTasks()]);
+  const [events, employees, projects, tasks, regularTasks] = await Promise.all([getCalendarEvents(), getEmployees(), getProjects(true), getTasks(), getRegularTasks()]);
   const viewer = await getCurrentViewer(employees);
 
   if (!viewer) {
@@ -24,7 +24,9 @@ export default async function TodayPage() {
     const diff = getDiffDays(task.due_date);
     return task.status !== "完了" && diff > 0 && diff <= 3;
   });
+  const visibleRegularTasks = viewer.isAdmin ? regularTasks : regularTasks.filter((task) => task.assignee_id === viewer.employee?.id);
   const projectById = new Map(projects.map((project) => [project.id, project.name]));
+  const employeeById = new Map(employees.map((employee) => [employee.id, employee.name]));
 
   return (
     <main className="page">
@@ -52,6 +54,17 @@ export default async function TodayPage() {
         </section>
 
         <section className="todayGrid">
+          <TodayColumn title="レギュラー業務">
+            {visibleRegularTasks.map((task) => (
+              <article className="warningItem regularTodayItem" key={task.id}>
+                <strong>{task.title}</strong>
+                <span>{employeeById.get(task.assignee_id) ?? "担当者不明"}</span>
+                {task.memo ? <p>{task.memo}</p> : null}
+              </article>
+            ))}
+            {visibleRegularTasks.length === 0 ? <div className="empty">レギュラー業務なし</div> : null}
+          </TodayColumn>
+
           <TodayColumn title="今日の予定">
             {todayEvents.map((event) => (
               <article className="upcomingItem" key={event.id}>

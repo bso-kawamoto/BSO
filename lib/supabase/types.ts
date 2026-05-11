@@ -129,6 +129,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      regular_tasks: {
+        Row: {
+          id: string;
+          assignee_id: string;
+          title: string;
+          memo: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          assignee_id: string;
+          title: string;
+          memo?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          assignee_id?: string;
+          title?: string;
+          memo?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       calendar_events: {
         Row: {
           id: string;
