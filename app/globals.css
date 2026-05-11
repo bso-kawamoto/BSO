@@ -1106,6 +1106,54 @@ a {
   margin-top: 18px;
 }
 
+.deadlineAlert {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #f0b8bf;
+  border-left: 7px solid var(--danger);
+  border-radius: 8px;
+  background: #fff1f3;
+  box-shadow: var(--shadow);
+}
+
+.deadlineAlertHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.deadlineAlertHeader h2 {
+  margin: 0 0 6px;
+  color: #7f1d1d;
+  font-size: 20px;
+}
+
+.deadlineAlertHeader p {
+  margin: 0;
+  color: #8f3c3c;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.deadlineAlertHeader span {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: var(--danger);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.deadlineAlertList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .detailLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1422,6 +1470,7 @@ a {
   .adminForm,
   .calendarHero,
   .calendarLayout,
+  .deadlineAlertList,
   .detailHero,
   .detailLayout,
   .detailSide,

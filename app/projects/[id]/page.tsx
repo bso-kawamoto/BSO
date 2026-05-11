@@ -47,11 +47,12 @@ export default async function ProjectDetailPage({
   const projectEvents = calendarEvents.filter((event) => event.project_id === project.id);
   const completedTasks = projectTasks.filter((task) => task.status === "完了");
   const activeProjectTasks = projectTasks.filter((task) => task.status !== "完了");
-  const overdueTasks = projectTasks.filter((task) => getDueState(task.due_date) === "overdue");
-  const soonTasks = projectTasks.filter((task) => {
+  const overdueTasks = activeProjectTasks.filter((task) => getDueState(task.due_date) === "overdue");
+  const soonTasks = activeProjectTasks.filter((task) => {
     const state = getDueState(task.due_date);
     return state === "soon3" || state === "soon7";
   });
+  const warningTasks = [...overdueTasks, ...soonTasks];
   const progress = projectTasks.length === 0 ? 0 : Math.round((completedTasks.length / projectTasks.length) * 100);
   const middleTasks = activeProjectTasks.filter((task) => task.task_level === "中タスク" || !task.parent_task_id);
   const childTasks = activeProjectTasks.filter((task) => task.task_level === "小タスク" && task.parent_task_id);
@@ -95,6 +96,23 @@ export default async function ProjectDetailPage({
           <Summary label="期限切れ" value={overdueTasks.length} />
           <Summary label="7日以内" value={soonTasks.length} />
         </section>
+
+        {warningTasks.length > 0 ? (
+          <section className="deadlineAlert" aria-label="期日警告">
+            <div className="deadlineAlertHeader">
+              <div>
+                <h2>期日警告</h2>
+                <p>期限切れ、または7日以内に期限が来る未完了タスクです。</p>
+              </div>
+              <span>{warningTasks.length}件</span>
+            </div>
+            <div className="deadlineAlertList">
+              {warningTasks.map((task) => (
+                <DueWarning task={task} key={task.id} />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="detailLayout">
           <div className="detailMain">
@@ -324,16 +342,6 @@ export default async function ProjectDetailPage({
                   <div className="empty">関連予定なし</div>
                 ) : (
                   projectEvents.map((event) => <EventItem employees={employeeOptions} event={event} key={event.id} projectId={project.id} />)
-                )}
-              </div>
-            </section>
-            <section className="panel">
-              <h2>期日警告</h2>
-              <div className="upcomingList">
-                {[...overdueTasks, ...soonTasks].length === 0 ? (
-                  <div className="empty">警告対象なし</div>
-                ) : (
-                  [...overdueTasks, ...soonTasks].map((task) => <DueWarning task={task} key={task.id} />)
                 )}
               </div>
             </section>
