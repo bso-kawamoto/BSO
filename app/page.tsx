@@ -223,7 +223,7 @@ export default async function Home({
               </div>
               <div className="field">
                 <label htmlFor="requester">依頼者</label>
-                <EmployeeSelect id="requester" employees={employeeOptions} name="requested_by_id" defaultValue={viewer.employee?.id ?? ""} />
+                <EmployeeSelect id="requester" employees={employeeOptions} includePresident name="requested_by_id" defaultValue={viewer.employee?.id ?? ""} />
               </div>
               <div className="field">
                 <label htmlFor="due-date">期日</label>
@@ -517,17 +517,20 @@ function formatDateKey(date: Date) {
 function EmployeeSelect({
   employees,
   id,
+  includePresident = false,
   name,
   defaultValue = ""
 }: {
   employees: Employee[];
   id: string;
+  includePresident?: boolean;
   name: string;
   defaultValue?: string;
 }) {
   return (
     <select id={id} name={name} defaultValue={defaultValue}>
       <option value="">未割当</option>
+      {includePresident ? <option value="__president__">社長</option> : null}
       {employees.map((employee) => (
         <option key={employee.id} value={employee.id}>
           {employee.name}
@@ -651,8 +654,9 @@ function TaskCard({ employees, projects, task }: { employees: Employee[]; projec
           </div>
           <div className="field">
             <label htmlFor={`board-task-requester-${task.id}`}>依頼者</label>
-            <select id={`board-task-requester-${task.id}`} name="requested_by_id" defaultValue={task.requested_by_id ?? ""}>
+            <select id={`board-task-requester-${task.id}`} name="requested_by_id" defaultValue={getRequesterDefaultValue(task)}>
               <option value="">未設定</option>
+              <option value="__president__">社長</option>
               {employees.map((employee) => (
                 <option key={employee.id} value={employee.id}>
                   {employee.name}
@@ -675,6 +679,10 @@ function TaskCard({ employees, projects, task }: { employees: Employee[]; projec
       </details>
     </article>
   );
+}
+
+function getRequesterDefaultValue(task: OperationTask) {
+  return task.requested_by_id ?? (task.requested_by_name === "社長" ? "__president__" : "");
 }
 
 function ProjectCard({ employees, project, projects, tasks }: { employees: Employee[]; project: Project | null; projects: Project[]; tasks: OperationTask[] }) {

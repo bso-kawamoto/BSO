@@ -166,8 +166,9 @@ function AdminTaskRow({
         </div>
         <div className="field">
           <label htmlFor={`requester-${task.id}`}>依頼者</label>
-          <select id={`requester-${task.id}`} name="requested_by_id" defaultValue={task.requested_by_id ?? ""}>
+          <select id={`requester-${task.id}`} name="requested_by_id" defaultValue={getRequesterDefaultValue(task)}>
             <option value="">未設定</option>
+            <option value="__president__">社長</option>
             {employees.map((employee) => (
               <option key={employee.id} value={employee.id}>
                 {employee.name}
@@ -212,6 +213,10 @@ function AdminTaskRow({
       </form>
     </article>
   );
+}
+
+function getRequesterDefaultValue(task: OperationTask) {
+  return task.requested_by_id ?? (task.requested_by_name === "社長" ? "__president__" : "");
 }
 
 function getAdminNotice(updated?: string, deleted?: string, teams?: string, count?: string) {

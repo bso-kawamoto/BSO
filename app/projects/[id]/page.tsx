@@ -199,7 +199,7 @@ export default async function ProjectDetailPage({
                     </div>
                     <div className="field">
                       <label htmlFor="detail-requester">依頼者</label>
-                      <EmployeeSelect employees={employeeOptions} id="detail-requester" name="requested_by_id" defaultValue={viewer.employee?.id ?? ""} />
+                      <EmployeeSelect employees={employeeOptions} id="detail-requester" includePresident name="requested_by_id" defaultValue={viewer.employee?.id ?? ""} />
                     </div>
                   </div>
                   <div className="formGridTwo">
@@ -348,16 +348,19 @@ function EmployeeSelect({
   defaultValue = "",
   employees,
   id,
+  includePresident = false,
   name
 }: {
   defaultValue?: string;
   employees: Employee[];
   id: string;
+  includePresident?: boolean;
   name: string;
 }) {
   return (
     <select id={id} name={name} defaultValue={defaultValue}>
       <option value="">未割当</option>
+      {includePresident ? <option value="__president__">社長</option> : null}
       {employees.map((employee) => (
         <option key={employee.id} value={employee.id}>
           {employee.name}
@@ -490,8 +493,9 @@ function DetailTaskCard({
         </div>
         <div className="field">
           <label htmlFor={`task-requester-${task.id}`}>依頼者</label>
-          <select id={`task-requester-${task.id}`} name="requested_by_id" defaultValue={task.requested_by_id ?? ""}>
+          <select id={`task-requester-${task.id}`} name="requested_by_id" defaultValue={getRequesterDefaultValue(task)}>
             <option value="">未設定</option>
+            <option value="__president__">社長</option>
             {employees.map((employee) => (
               <option key={employee.id} value={employee.id}>
                 {employee.name}
@@ -543,6 +547,10 @@ function DetailTaskCard({
       </form>
     </article>
   );
+}
+
+function getRequesterDefaultValue(task: OperationTask) {
+  return task.requested_by_id ?? (task.requested_by_name === "社長" ? "__president__" : "");
 }
 
 function EventItem({ employees, event, projectId }: { employees: Employee[]; event: CalendarEvent; projectId: string }) {
