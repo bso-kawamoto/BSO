@@ -1118,6 +1118,7 @@ a {
 .detailSide {
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 
 .detailCreateGrid {
@@ -1170,7 +1171,13 @@ a {
 }
 
 .projectEditForm {
-  grid-template-columns: minmax(220px, 1.5fr) minmax(150px, 0.7fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+}
+
+.projectEditForm .button {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-width: 160px;
 }
 
 .statusPill {
