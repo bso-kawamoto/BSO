@@ -894,6 +894,32 @@ export async function updateProjectTask(formData: FormData) {
   redirect(`/projects/${projectId}?updated=success`);
 }
 
+export async function updateProjectTaskStatus(formData: FormData) {
+  const projectId = readNullableUuid(formData, "project_id");
+  const id = readText(formData, "id");
+  const status = readStatus(formData);
+
+  if (!projectId || !id || !status) {
+    redirect(projectId ? `/projects/${projectId}?updated=invalid` : "/?updated=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect(`/projects/${projectId}?updated=missing-env`);
+  }
+
+  const { error } = await supabase.from("operation_tasks").update({ status }).eq("id", id).eq("project_id", projectId);
+
+  if (error) {
+    console.error("Failed to update project task status:", error.message);
+    redirect(`/projects/${projectId}?updated=error`);
+  }
+
+  revalidateProjectViews(projectId);
+  redirect(`/projects/${projectId}?updated=success#task-${id}`);
+}
+
 export async function updateProjectTaskOrder(formData: FormData) {
   const projectId = readNullableUuid(formData, "project_id");
   const ids = formData

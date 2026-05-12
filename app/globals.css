@@ -1594,7 +1594,7 @@ a {
 
 .detailTaskSummary {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.4fr);
+  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.1fr) minmax(220px, 0.78fr);
   gap: 16px;
   align-items: start;
   min-height: 62px;
@@ -1642,6 +1642,29 @@ a {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 7px;
+}
+
+.projectStatusForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.projectStatusForm label {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.projectStatusForm select {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 9px 10px;
+  background: #fbfdff;
+  color: var(--text);
 }
 
 .infoBadge {

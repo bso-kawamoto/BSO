@@ -10,7 +10,8 @@ import {
   restoreProject,
   updateProjectCalendarEvent,
   updateProjectDetails,
-  updateProjectTask
+  updateProjectTask,
+  updateProjectTaskStatus
 } from "@/app/actions";
 import { TaskOrderEditor } from "@/app/task-order-editor";
 import { getCurrentViewer } from "@/lib/auth";
@@ -562,12 +563,24 @@ function DetailTaskCard({
         </div>
         <div className="detailTaskBadges">
           <span className={`infoBadge ${categoryBadgeClass(task.category)}`}>{task.category}</span>
-          <span className={`infoBadge ${statusBadgeClass(task.status)}`}>{task.status}</span>
           <span className={`infoBadge ${priorityBadgeClass(task.priority)}`}>{`\u512a\u5148\u5ea6 ${task.priority}`}</span>
           <span className="infoBadge neutralBadge">{`\u62c5\u5f53 ${task.owner}`}</span>
           {task.requested_by_name ? <span className="infoBadge neutralBadge">{`\u4f9d\u983c ${task.requested_by_name}`}</span> : null}
           <span className={`infoBadge ${state ? dueBadgeClass(state) : "neutralBadge"}`}>{task.due_date ? getDueLabel(task.due_date, state) : "\u671f\u9650 \u672a\u8a2d\u5b9a"}</span>
         </div>
+        <form action={updateProjectTaskStatus} className="projectStatusForm">
+          <input type="hidden" name="project_id" value={projectId} />
+          <input type="hidden" name="id" value={task.id} />
+          <label htmlFor={`quick-status-${task.id}`}>ステータス</label>
+          <select id={`quick-status-${task.id}`} name="status" defaultValue={task.status}>
+            {STATUSES.map((status) => (
+              <option key={status}>{status}</option>
+            ))}
+          </select>
+          <button className="secondaryButton" type="submit">
+            変更
+          </button>
+        </form>
       </div>
       <details className="taskEditDetails detailTaskEditDetails">
         <summary>{"\u5185\u5bb9\u3092\u4fee\u6b63"}</summary>
@@ -684,13 +697,6 @@ function getRequesterDefaultValue(task: OperationTask) {
 function categoryBadgeClass(category: OperationTask["category"]) {
   const index = CATEGORIES.indexOf(category);
   return `categoryBadge categoryTone${index >= 0 ? index + 1 : 1}`;
-}
-
-function statusBadgeClass(status: OperationTask["status"]) {
-  if (status === STATUSES[3]) return "statusDoneBadge";
-  if (status === STATUSES[2]) return "statusReviewBadge";
-  if (status === STATUSES[1]) return "statusActiveBadge";
-  return "statusTodoBadge";
 }
 
 function priorityBadgeClass(priority: OperationTask["priority"]) {
