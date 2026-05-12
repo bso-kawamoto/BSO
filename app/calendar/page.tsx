@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logout } from "@/app/actions";
-import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
+import { getCurrentViewer } from "@/lib/auth";
 import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import { STATUSES, type CalendarEvent, type OperationTask, type Project } from "@/lib/types";
@@ -34,7 +34,7 @@ export default async function CalendarPage({
 
   const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
   const visibleCalendarEvents = calendarEvents;
-  const visibleProjects = filterProjectsForViewer(projects, visibleTasks, viewer.isAdmin ? calendarEvents : [], viewer);
+  const visibleProjects = projects;
   const items = buildCalendarItems(visibleProjects, visibleTasks, visibleCalendarEvents);
   const baseDate = getBaseDate(params?.month);
   const days = buildMonthDays(baseDate);
@@ -164,22 +164,6 @@ function Summary({ label, value }: { label: string; value: number }) {
       <div className="summaryValue">{value}</div>
     </div>
   );
-}
-
-function filterProjectsForViewer(projects: Project[], tasks: OperationTask[], events: CalendarEvent[], viewer: CurrentViewer) {
-  if (viewer.isAdmin) {
-    return projects;
-  }
-
-  const projectIds = new Set<string>();
-  tasks.forEach((task) => {
-    if (task.project_id) projectIds.add(task.project_id);
-  });
-  events.forEach((event) => {
-    if (event.project_id) projectIds.add(event.project_id);
-  });
-
-  return projects.filter((project) => projectIds.has(project.id));
 }
 
 function buildCalendarItems(projects: Project[], tasks: OperationTask[], events: CalendarEvent[]): CalendarItem[] {

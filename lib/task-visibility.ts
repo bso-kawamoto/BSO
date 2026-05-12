@@ -27,6 +27,10 @@ export function filterEmployeesForViewer(employees: Employee[], viewer: CurrentV
 }
 
 function canViewerSeeTask(task: OperationTask, viewer: CurrentViewer, employees: Employee[]) {
+  if (!task.parent_task_id) {
+    return true;
+  }
+
   if (task.assignee_id === viewer.employee?.id) {
     return true;
   }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createCalendarEvent, createProject, logout, updateTaskDetails, updateTaskStatus } from "@/app/actions";
 import { QuickTaskForm } from "@/app/quick-task-form";
-import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
+import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
@@ -31,9 +31,8 @@ export default async function Home({
   }
 
   const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
-  const personalCalendarEvents = filterEventsForViewer(calendarEvents, viewer);
   const visibleCalendarEvents = calendarEvents;
-  const visibleProjects = filterProjectsForViewer(projects, visibleTasks, personalCalendarEvents, viewer);
+  const visibleProjects = projects;
   const middleTasks = visibleTasks.filter((task) => !task.parent_task_id);
   const openTasks = visibleTasks.filter((task) => task.status !== STATUSES[3]);
   const highPriority = visibleTasks.filter((task) => task.priority === PRIORITIES[2]);
@@ -254,30 +253,6 @@ export default async function Home({
       </div>
     </main>
   );
-}
-
-function filterEventsForViewer(events: CalendarEvent[], viewer: CurrentViewer) {
-  if (viewer.isAdmin) {
-    return events;
-  }
-
-  return events.filter((event) => event.assignee_id === viewer.employee?.id);
-}
-
-function filterProjectsForViewer(projects: Project[], tasks: OperationTask[], events: CalendarEvent[], viewer: CurrentViewer) {
-  if (viewer.isAdmin) {
-    return projects;
-  }
-
-  const projectIds = new Set<string>();
-  tasks.forEach((task) => {
-    if (task.project_id) projectIds.add(task.project_id);
-  });
-  events.forEach((event) => {
-    if (event.project_id) projectIds.add(event.project_id);
-  });
-
-  return projects.filter((project) => projectIds.has(project.id));
 }
 
 function buildTaskTemplateTitles(tasks: OperationTask[]) {
