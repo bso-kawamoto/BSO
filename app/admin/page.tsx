@@ -184,8 +184,8 @@ export default async function AdminPage({
               {regularTasks.length === 0 ? <div className="empty">登録済みのレギュラー業務はありません</div> : null}
             </div>
           </section>
-          <section className="panel bulkTaskPanel">
-            <h2>表示中タスクをまとめて変更</h2>
+          <details className="panel bulkTaskPanel adminBulkPanel">
+            <summary>表示中タスクをまとめて変更</summary>
             <p className="mutedText">下に表示されている最大40件だけが対象です。空欄の項目は変更しません。</p>
             <form action={bulkUpdateTaskManagement} className="bulkTaskForm">
               {visibleTasks.map((task) => (
@@ -254,7 +254,7 @@ export default async function AdminPage({
                 表示中{visibleTasks.length}件をまとめて更新
               </button>
             </form>
-          </section>
+          </details>
           <div className="adminList">
             <p className="mutedText">表示 {visibleTasks.length}件 / 該当 {filteredTasks.length}件 / 全体 {tasks.length}件</p>
             {visibleTasks.map((task) => (

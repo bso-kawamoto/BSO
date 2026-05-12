@@ -158,8 +158,8 @@ export default async function ProjectDetailPage({
               )}
             </section>
             <section className="detailCreateGrid">
-              <div className="panel">
-                <h2>タスク追加</h2>
+              <details className="panel createCollapsePanel">
+                <summary>タスクを追加</summary>
                 <form action={createProjectTask} className="quickForm">
                   <input type="hidden" name="project_id" value={project.id} />
                   <div className="field">
@@ -237,9 +237,9 @@ export default async function ProjectDetailPage({
                     この案件にタスク追加
                   </button>
                 </form>
-              </div>
-              <div className="panel">
-                <h2>予定追加</h2>
+              </details>
+              <details className="panel createCollapsePanel">
+                <summary>予定を追加</summary>
                 <form action={createProjectCalendarEvent} className="quickForm">
                   <input type="hidden" name="calendar_project_id" value={project.id} />
                   <div className="field">
@@ -284,7 +284,7 @@ export default async function ProjectDetailPage({
                     この案件に予定追加
                   </button>
                 </form>
-              </div>
+              </details>
             </section>
             <div className="sectionHeader">
               <div>

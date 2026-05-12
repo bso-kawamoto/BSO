@@ -98,9 +98,19 @@ export default async function EmployeesPage({
                       ))}
                     </div>
                   ) : null}
-                  {openTasks.map((task) => (
+                  {openTasks.slice(0, 5).map((task) => (
                     <EmployeeTaskRow key={task.id} projectName={getProjectName(projectNames, task.project_id)} task={task} />
                   ))}
+                  {openTasks.length > 5 ? (
+                    <details className="moreTaskBox">
+                      <summary>残り {openTasks.length - 5}件を表示</summary>
+                      <div className="completedTaskList">
+                        {openTasks.slice(5).map((task) => (
+                          <EmployeeTaskRow key={task.id} projectName={getProjectName(projectNames, task.project_id)} task={task} />
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
                   {openTasks.length === 0 ? <div className="empty">担当タスクなし</div> : null}
                 </div>
                 {completedTasks.length > 0 ? (

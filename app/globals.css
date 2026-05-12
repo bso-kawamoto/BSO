@@ -208,7 +208,7 @@ a {
 
 .quickPanel {
   display: grid;
-  grid-template-columns: minmax(220px, 0.8fr) minmax(260px, 1fr) minmax(320px, 1.25fr);
+  grid-template-columns: 1fr;
   gap: 18px;
   align-items: start;
 }
@@ -220,24 +220,79 @@ a {
 
 .quickPanel .quickForm {
   min-width: 0;
-  padding: 18px;
+  padding: 16px 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.quickPanel .projectQuickForm {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.quickPanel .quickForm:not(.projectQuickForm) {
+  grid-column: auto;
+}
+
+.quickPanel .formGridTwo {
+  grid-template-columns: 1fr;
+}
+
+.quickActionGrid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.35fr) repeat(2, minmax(220px, 0.85fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.quickActionCard,
+.createCollapsePanel,
+.adminBulkPanel,
+.moreTaskBox {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
 }
 
-.quickPanel .projectQuickForm {
-  margin-bottom: 0;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--border);
+.quickActionCard {
+  padding: 14px;
 }
 
-.quickPanel .quickForm:not(.projectQuickForm) {
-  grid-column: span 1;
+.quickActionCard summary,
+.createCollapsePanel summary,
+.adminBulkPanel summary,
+.moreTaskBox summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 42px;
+  color: var(--accent);
+  font-weight: 900;
+  cursor: pointer;
 }
 
-.quickPanel .formGridTwo {
-  grid-template-columns: 1fr;
+.quickActionCard summary::after,
+.createCollapsePanel summary::after,
+.adminBulkPanel summary::after,
+.moreTaskBox summary::after {
+  content: "開く";
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--surface-muted);
+  font-size: 11px;
+}
+
+.quickActionCard[open] summary::after,
+.createCollapsePanel[open] summary::after,
+.adminBulkPanel[open] summary::after,
+.moreTaskBox[open] summary::after {
+  content: "閉じる";
 }
 
 .panel h2,
@@ -815,6 +870,16 @@ a {
   display: grid;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.adminBulkPanel {
+  display: block;
+  border-color: rgba(184, 107, 29, 0.28);
+  background: #fffaf4;
+}
+
+.adminBulkPanel summary {
+  color: #7c2d12;
 }
 
 .bulkTaskForm {
@@ -1688,6 +1753,18 @@ a {
   margin-bottom: 16px;
 }
 
+.createCollapsePanel {
+  padding: 18px;
+}
+
+.createCollapsePanel .quickForm,
+.adminBulkPanel .bulkTaskForm,
+.moreTaskBox .completedTaskList {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
 .compactHeader {
   margin-bottom: 0;
 }
@@ -1925,6 +2002,17 @@ a {
   margin-top: -2px;
 }
 
+.moreTaskBox {
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.moreTaskBox summary {
+  min-height: 32px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .miniRow strong {
   min-width: 0;
   overflow: hidden;
@@ -1953,7 +2041,8 @@ a {
 
   .topbar,
   .hero,
-  .quickPanel {
+  .quickPanel,
+  .quickActionGrid {
     grid-template-columns: 1fr;
   }
 

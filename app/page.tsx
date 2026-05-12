@@ -98,74 +98,10 @@ export default async function Home({
           <aside className="panel quickPanel" aria-label="Quick create task and project">
             <h2>クイック登録</h2>
             {notice ? <p className={`notice ${notice.kind}`}>{notice.message}</p> : null}
-            <form action={createProject} className="quickForm projectQuickForm">
-              <div className="field">
-                <label htmlFor="project-name">案件名</label>
-                <input id="project-name" name="name" maxLength={120} placeholder="例: お伊勢さん杯" required />
-              </div>
-              <div className="field">
-                <label htmlFor="project-due">案件期日</label>
-                <input id="project-due" name="due_date" type="date" />
-              </div>
-              <button className="secondaryButton" type="submit">
-                案件を追加
-              </button>
-            </form>
-
-            <form action={createCalendarEvent} className="quickForm projectQuickForm">
-              <div className="field">
-                <label htmlFor="calendar-title">予定名</label>
-                <input id="calendar-title" name="calendar_title" maxLength={120} placeholder="例: 打ち合わせ" required />
-              </div>
-              <div className="formGridTwo">
-                <div className="field">
-                  <label htmlFor="event-date">開始日</label>
-                  <input id="event-date" name="event_date" type="date" required />
-                </div>
-                <div className="field">
-                  <label htmlFor="end-date">終了日</label>
-                  <input id="end-date" name="end_date" type="date" required />
-                </div>
-              </div>
-              <label className="checkField" htmlFor="is-all-day">
-                <input id="is-all-day" name="is_all_day" type="checkbox" />
-                <span>終日</span>
-              </label>
-              <div className="formGridTwo">
-                <div className="field">
-                  <label htmlFor="start-time">開始</label>
-                  <input id="start-time" name="start_time" type="time" />
-                </div>
-                <div className="field">
-                  <label htmlFor="end-time">終了</label>
-                  <input id="end-time" name="end_time" type="time" />
-                </div>
-              </div>
-              <div className="field">
-                <label htmlFor="calendar-project">関連案件</label>
-                <select id="calendar-project" name="calendar_project_id" defaultValue="">
-                  <option value="">なし</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="calendar-owner">担当者</label>
-                <EmployeeSelect id="calendar-owner" employees={employeeOptions} name="calendar_assignee_id" defaultValue={viewer.employee?.id ?? ""} />
-              </div>
-              <div className="field">
-                <label htmlFor="location">場所</label>
-                <input id="location" name="location" maxLength={120} placeholder="例: 事務所" />
-              </div>
-              <button className="secondaryButton" type="submit">
-                予定を追加
-              </button>
-            </form>
-
-            <form action={createTask} className="quickForm">
+            <div className="quickActionGrid">
+              <details className="quickActionCard" open>
+                <summary>タスクを登録</summary>
+                <form action={createTask} className="quickForm">
               <div className="field">
                 <label htmlFor="title">タスク名</label>
                 <input id="title" name="title" list="task-template-options" maxLength={120} placeholder="例: 協賛リスト作成" required />
@@ -243,7 +179,82 @@ export default async function Home({
               <button className="button" type="submit">
                 タスクを追加
               </button>
-            </form>
+                </form>
+              </details>
+
+              <details className="quickActionCard">
+                <summary>案件を登録</summary>
+                <form action={createProject} className="quickForm projectQuickForm">
+                  <div className="field">
+                    <label htmlFor="project-name">案件名</label>
+                    <input id="project-name" name="name" maxLength={120} placeholder="例: お伊勢さん杯" required />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="project-due">案件期日</label>
+                    <input id="project-due" name="due_date" type="date" />
+                  </div>
+                  <button className="secondaryButton" type="submit">
+                    案件を追加
+                  </button>
+                </form>
+              </details>
+
+              <details className="quickActionCard">
+                <summary>予定を登録</summary>
+                <form action={createCalendarEvent} className="quickForm projectQuickForm">
+                  <div className="field">
+                    <label htmlFor="calendar-title">予定名</label>
+                    <input id="calendar-title" name="calendar_title" maxLength={120} placeholder="例: 打ち合わせ" required />
+                  </div>
+                  <div className="formGridTwo">
+                    <div className="field">
+                      <label htmlFor="event-date">開始日</label>
+                      <input id="event-date" name="event_date" type="date" required />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="end-date">終了日</label>
+                      <input id="end-date" name="end_date" type="date" required />
+                    </div>
+                  </div>
+                  <label className="checkField" htmlFor="is-all-day">
+                    <input id="is-all-day" name="is_all_day" type="checkbox" />
+                    <span>終日</span>
+                  </label>
+                  <div className="formGridTwo">
+                    <div className="field">
+                      <label htmlFor="start-time">開始</label>
+                      <input id="start-time" name="start_time" type="time" />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="end-time">終了</label>
+                      <input id="end-time" name="end_time" type="time" />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="calendar-project">関連案件</label>
+                    <select id="calendar-project" name="calendar_project_id" defaultValue="">
+                      <option value="">なし</option>
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="calendar-owner">担当者</label>
+                    <EmployeeSelect id="calendar-owner" employees={employeeOptions} name="calendar_assignee_id" defaultValue={viewer.employee?.id ?? ""} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="location">場所</label>
+                    <input id="location" name="location" maxLength={120} placeholder="例: 事務所" />
+                  </div>
+                  <button className="secondaryButton" type="submit">
+                    予定を追加
+                  </button>
+                </form>
+              </details>
+            </div>
           </aside>
         </section>
 
