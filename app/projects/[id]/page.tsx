@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import {
   archiveProject,
   createProjectCalendarEvent,
+  createProjectSubtasks,
   createProjectTask,
   deleteProjectCalendarEvent,
   deleteProjectTask,
@@ -235,6 +236,83 @@ export default async function ProjectDetailPage({
                   </div>
                   <button className="button" type="submit">
                     この案件にタスク追加
+                  </button>
+                </form>
+              </details>
+              <details className="panel createCollapsePanel">
+                <summary>小タスクをまとめて追加</summary>
+                <form action={createProjectSubtasks} className="quickForm">
+                  <input type="hidden" name="project_id" value={project.id} />
+                  <div className="field">
+                    <label htmlFor="bulk-parent-task">親の中タスク</label>
+                    <select id="bulk-parent-task" name="parent_task_id" required defaultValue={middleTasks[0]?.id ?? ""}>
+                      <option value="">選択してください</option>
+                      {middleTasks.map((task) => (
+                        <option key={task.id} value={task.id}>
+                          {task.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="bulk-subtask-titles">小タスク名</label>
+                    <textarea
+                      id="bulk-subtask-titles"
+                      name="bulk_titles"
+                      rows={7}
+                      maxLength={3000}
+                      placeholder={"1行に1つずつ入力\n例: 協賛リスト作成\n営業メール送付\n返信確認"}
+                      required
+                    />
+                  </div>
+                  <div className="formGridTwo">
+                    <div className="field">
+                      <label htmlFor="bulk-subtask-category">カテゴリ</label>
+                      <select id="bulk-subtask-category" name="category" defaultValue={CATEGORIES[0]}>
+                        {CATEGORIES.map((category) => (
+                          <option key={category}>{category}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label htmlFor="bulk-subtask-status">ステータス</label>
+                      <select id="bulk-subtask-status" name="status" defaultValue={STATUSES[0]}>
+                        {STATUSES.map((status) => (
+                          <option key={status}>{status}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="formGridTwo">
+                    <div className="field">
+                      <label htmlFor="bulk-subtask-priority">優先度</label>
+                      <select id="bulk-subtask-priority" name="priority" defaultValue={PRIORITIES[1]}>
+                        {PRIORITIES.map((priority) => (
+                          <option key={priority}>{priority}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label htmlFor="bulk-subtask-due">期日</label>
+                      <input id="bulk-subtask-due" name="due_date" type="date" />
+                    </div>
+                  </div>
+                  <div className="formGridTwo">
+                    <div className="field">
+                      <label htmlFor="bulk-subtask-owner">担当者</label>
+                      <EmployeeSelect employees={employeeOptions} id="bulk-subtask-owner" name="assignee_id" />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="bulk-subtask-requester">依頼者</label>
+                      <EmployeeSelect employees={employeeOptions} id="bulk-subtask-requester" includePresident name="requested_by_id" defaultValue={viewer.employee?.id ?? ""} />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="bulk-subtask-memo">共通メモ</label>
+                    <textarea id="bulk-subtask-memo" name="memo" rows={2} maxLength={1000} placeholder="まとめて追加する小タスク共通のメモ" />
+                  </div>
+                  <button className="button" type="submit" disabled={middleTasks.length === 0}>
+                    小タスクをまとめて追加
                   </button>
                 </form>
               </details>

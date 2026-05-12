@@ -399,6 +399,70 @@ export async function createProjectTask(formData: FormData) {
   redirect(`/projects/${projectId}?created=success`);
 }
 
+export async function createProjectSubtasks(formData: FormData) {
+  const projectId = readNullableUuid(formData, "project_id");
+  const parentTaskId = readNullableUuid(formData, "parent_task_id");
+  const titles = readTaskTitleLines(formData, "bulk_titles");
+  const category = readCategory(formData);
+  const status = readStatus(formData);
+  const priority = readPriority(formData) ?? PRIORITIES[1];
+  const assigneeId = readNullableUuid(formData, "assignee_id");
+  const requester = await readRequester(formData);
+  const dueDate = readOptionalDate(formData);
+  const memo = readLongText(formData, "memo");
+
+  if (!projectId || !parentTaskId || titles.length === 0 || !category || !status) {
+    redirect(projectId ? `/projects/${projectId}?created=invalid` : "/?created=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect(`/projects/${projectId}?created=missing-env`);
+  }
+
+  const assigneeName = await getAssigneeName(assigneeId);
+  const { error } = await supabase.from("operation_tasks").insert(
+    titles.map((title) => ({
+      project_id: projectId,
+      parent_task_id: parentTaskId,
+      assignee_id: assigneeId,
+      task_level: TASK_LEVELS[1],
+      title,
+      category,
+      status,
+      priority,
+      owner: assigneeName ?? "未割当",
+      requested_by_id: requester.id,
+      requested_by_name: requester.name,
+      description: null,
+      memo,
+      due_date: dueDate
+    }))
+  );
+
+  if (error) {
+    console.error("Failed to create project subtasks:", error.message);
+    redirect(`/projects/${projectId}?created=error`);
+  }
+
+  await notifyTaskAssigned({
+    assigneeName,
+    category,
+    dueDate,
+    projectId,
+    taskLevel: TASK_LEVELS[1],
+    title: `${titles.length}件の小タスクをまとめて追加`
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/employees");
+  revalidatePath("/today");
+  revalidatePath(`/projects/${projectId}`);
+  redirect(`/projects/${projectId}?created=success`);
+}
+
 export async function createCalendarEvent(formData: FormData) {
   const title = readText(formData, "calendar_title");
   const eventDate = readRequiredDate(formData, "event_date");
@@ -1053,6 +1117,16 @@ function readLongText(formData: FormData, key: string) {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed.slice(0, 1000) : null;
+}
+
+function readTaskTitleLines(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (typeof value !== "string") {
+    return [];
+  }
+
+  return [...new Set(value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => line.slice(0, 120)))].slice(0, 30);
 }
 
 function readCategory(formData: FormData): TaskCategory | null {
