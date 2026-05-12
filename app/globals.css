@@ -1418,15 +1418,17 @@ a {
 }
 
 .detailTaskGroup {
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid rgba(10, 47, 95, 0.12);
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(10, 47, 95, 0.14);
   border-radius: 8px;
-  background: rgba(242, 247, 252, 0.72);
+  background: #f5f8fc;
 }
 
 .detailTask {
   position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
   border-left: 5px solid var(--accent-soft);
   scroll-margin-top: 18px;
 }
@@ -1437,43 +1439,28 @@ a {
 }
 
 .detailTaskMiddle {
-  border-color: rgba(10, 47, 95, 0.2);
+  padding-top: 16px;
+  border-color: rgba(10, 47, 95, 0.18);
   border-left-color: var(--accent);
-  background: linear-gradient(90deg, rgba(10, 47, 95, 0.1), rgba(255, 255, 255, 0.98) 28%);
-  box-shadow: 0 12px 28px rgba(10, 47, 95, 0.08);
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(10, 47, 95, 0.07);
 }
 
-.detailTaskMiddle::before,
-.detailTaskChild::before {
+.detailTaskMiddle::after {
+  content: "";
   position: absolute;
-  top: 10px;
-  right: 12px;
-  padding: 4px 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.detailTaskMiddle::before {
-  content: "中タスク";
-  color: #ffffff;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
   background: var(--accent);
 }
 
 .detailTaskChild {
+  border-color: rgba(184, 201, 220, 0.82);
   border-left-color: #b8c9dc;
-  background: #ffffff;
-}
-
-.detailTaskChild::before {
-  content: "小タスク";
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.detailTaskMiddle::before,
-.detailTaskChild::before {
-  display: none;
+  background: #fbfdff;
+  box-shadow: none;
 }
 
 .detailTask:target {
@@ -1484,9 +1471,10 @@ a {
 .detailTaskSummary {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.4fr);
-  gap: 14px;
+  gap: 16px;
   align-items: start;
-  padding-right: 2px;
+  min-height: 62px;
+  padding: 2px 2px 2px 0;
 }
 
 .detailTaskTitleBlock {
@@ -1498,12 +1486,12 @@ a {
 .detailTaskTitleBlock h3 {
   margin: 0;
   color: var(--text);
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1.35;
 }
 
 .detailTaskChild .detailTaskTitleBlock h3 {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .detailTaskTitleBlock p {
@@ -1529,14 +1517,14 @@ a {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 7px;
 }
 
 .infoBadge {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 5px 9px;
+  min-height: 32px;
+  padding: 6px 10px;
   border: 1px solid transparent;
   border-radius: 999px;
   font-size: 12px;
@@ -1642,11 +1630,22 @@ a {
 }
 
 .detailTaskEditDetails {
-  margin-top: 6px;
+  margin-top: 10px;
+  border-top: 1px solid rgba(10, 47, 95, 0.1);
+  padding-top: 8px;
 }
 
 .detailTaskEditDetails summary {
-  padding: 7px 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--accent-soft);
+}
+
+.detailTaskEditDetails summary:hover {
+  background: rgba(10, 47, 95, 0.12);
 }
 
 .detailEditForm {
