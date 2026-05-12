@@ -286,8 +286,7 @@ export async function createTask(formData: FormData) {
   const parentTaskId = readNullableUuid(formData, "parent_task_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requester = await readRequester(formData);
-  const requestedTaskLevel = readTaskLevel(formData) ?? TASK_LEVELS[0];
-  const taskLevel = parentTaskId ? TASK_LEVELS[1] : requestedTaskLevel;
+  const taskLevel = parentTaskId ? TASK_LEVELS[1] : TASK_LEVELS[0];
   const memo = readLongText(formData, "memo");
   const dueDate = readOptionalDate(formData);
 
@@ -346,8 +345,7 @@ export async function createProjectTask(formData: FormData) {
   const parentTaskId = readNullableUuid(formData, "parent_task_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requester = await readRequester(formData);
-  const requestedTaskLevel = readTaskLevel(formData) ?? TASK_LEVELS[0];
-  const taskLevel = parentTaskId ? TASK_LEVELS[1] : requestedTaskLevel;
+  const taskLevel = parentTaskId ? TASK_LEVELS[1] : TASK_LEVELS[0];
   const dueDate = readOptionalDate(formData);
   const memo = readLongText(formData, "memo");
 
@@ -732,8 +730,7 @@ export async function updateTaskManagement(formData: FormData) {
   const parentTaskId = readNullableUuid(formData, "parent_task_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requester = await readRequester(formData);
-  const requestedTaskLevel = readTaskLevel(formData) ?? TASK_LEVELS[0];
-  const taskLevel = parentTaskId ? TASK_LEVELS[1] : requestedTaskLevel;
+  const taskLevel = parentTaskId ? TASK_LEVELS[1] : TASK_LEVELS[0];
 
   const memo = readLongText(formData, "memo");
 
@@ -853,8 +850,7 @@ export async function updateProjectTask(formData: FormData) {
   const parentTaskId = readNullableUuid(formData, "parent_task_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requester = await readRequester(formData);
-  const requestedTaskLevel = readTaskLevel(formData) ?? TASK_LEVELS[0];
-  const taskLevel = parentTaskId ? TASK_LEVELS[1] : requestedTaskLevel;
+  const taskLevel = parentTaskId ? TASK_LEVELS[1] : TASK_LEVELS[0];
   const memo = readLongText(formData, "memo");
 
   if (!projectId || !id || !title || !category || !status || !priority) {
@@ -1161,11 +1157,6 @@ function readPriority(formData: FormData): TaskPriority | null {
 function readOptionalPriority(formData: FormData, key: string): TaskPriority | null {
   const value = formData.get(key);
   return typeof value === "string" && PRIORITIES.includes(value as TaskPriority) ? (value as TaskPriority) : null;
-}
-
-function readTaskLevel(formData: FormData): TaskLevel | null {
-  const value = formData.get("task_level");
-  return typeof value === "string" && TASK_LEVELS.includes(value as TaskLevel) ? (value as TaskLevel) : null;
 }
 
 function readManager(formData: FormData): Manager | null {

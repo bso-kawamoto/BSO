@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createCalendarEvent, createProject, createTask, logout, updateTaskDetails, updateTaskStatus } from "@/app/actions";
+import { createCalendarEvent, createProject, logout, updateTaskDetails, updateTaskStatus } from "@/app/actions";
+import { QuickTaskForm } from "@/app/quick-task-form";
 import { getCurrentViewer, type CurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
-  MIDDLE_TASK_TEMPLATES,
   PRIORITIES,
   STATUSES,
   TASK_LEVELS,
@@ -34,7 +34,7 @@ export default async function Home({
   const personalCalendarEvents = filterEventsForViewer(calendarEvents, viewer);
   const visibleCalendarEvents = calendarEvents;
   const visibleProjects = filterProjectsForViewer(projects, visibleTasks, personalCalendarEvents, viewer);
-  const middleTasks = visibleTasks.filter((task) => task.task_level === TASK_LEVELS[0]);
+  const middleTasks = visibleTasks.filter((task) => !task.parent_task_id);
   const openTasks = visibleTasks.filter((task) => task.status !== STATUSES[3]);
   const highPriority = visibleTasks.filter((task) => task.priority === PRIORITIES[2]);
   const dueSoon = visibleTasks.filter((task) => task.due_date).slice(0, 4);
@@ -101,85 +101,14 @@ export default async function Home({
             <div className="quickActionGrid">
               <details className="quickActionCard" open>
                 <summary>タスクを登録</summary>
-                <form action={createTask} className="quickForm">
-              <div className="field">
-                <label htmlFor="title">タスク名</label>
-                <input id="title" name="title" list="task-template-options" maxLength={120} placeholder="例: 協賛リスト作成" required />
-                <datalist id="task-template-options">
-                  {MIDDLE_TASK_TEMPLATES.map((title) => (
-                    <option key={title} value={title} />
-                  ))}
-                  {taskTemplateTitles.map((title) => (
-                    <option key={title} value={title} />
-                  ))}
-                </datalist>
-              </div>
-              <div className="field">
-                <label htmlFor="project">案件</label>
-                <select id="project" name="project_id" defaultValue={visibleProjects[0]?.id ?? projects[0]?.id ?? ""}>
-                  <option value="">案件なし</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="task-level">階層</label>
-                <select id="task-level" name="task_level" defaultValue={TASK_LEVELS[0]}>
-                  {TASK_LEVELS.map((level) => (
-                    <option key={level}>{level}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="parent-task">親タスク</label>
-                <select id="parent-task" name="parent_task_id" defaultValue="">
-                  <option value="">中タスクとして登録</option>
-                  {middleTasks.map((task) => (
-                    <option key={task.id} value={task.id}>
-                      {task.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="category">カテゴリ</label>
-                <select id="category" name="category" defaultValue={CATEGORIES[0]}>
-                  {CATEGORIES.map((category) => (
-                    <option key={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="status">ステータス</label>
-                <select id="status" name="status" defaultValue={STATUSES[0]}>
-                  {STATUSES.map((status) => (
-                    <option key={status}>{status}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label htmlFor="owner">担当者</label>
-                <EmployeeSelect id="owner" employees={employeeOptions} name="assignee_id" defaultValue={viewer.employee?.id ?? ""} />
-              </div>
-              <div className="field">
-                <label htmlFor="requester">依頼者</label>
-                <EmployeeSelect id="requester" employees={employeeOptions} includePresident name="requested_by_id" defaultValue={viewer.employee?.id ?? ""} />
-              </div>
-              <div className="field">
-                <label htmlFor="due-date">期日</label>
-                <input id="due-date" name="due_date" type="date" />
-              </div>
-              <div className="field">
-                <label htmlFor="task-memo">進捗メモ</label>
-                <textarea id="task-memo" name="memo" rows={3} maxLength={1000} placeholder="例: 先方へ確認中。次は見積を送る。" />
-              </div>
-              <button className="button" type="submit">
-                タスクを追加
-              </button>
-                </form>
+                <QuickTaskForm
+                  defaultEmployeeId={viewer.employee?.id ?? ""}
+                  defaultProjectId={visibleProjects[0]?.id ?? projects[0]?.id ?? ""}
+                  employees={employeeOptions}
+                  middleTasks={middleTasks}
+                  projects={projects}
+                  taskTemplateTitles={taskTemplateTitles}
+                />
               </details>
 
               <details className="quickActionCard">
