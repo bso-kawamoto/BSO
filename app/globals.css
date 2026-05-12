@@ -1431,6 +1431,11 @@ a {
   scroll-margin-top: 18px;
 }
 
+.detailTask > .taskMeta,
+.detailTask > .taskMemo {
+  display: none;
+}
+
 .detailTaskMiddle {
   border-color: rgba(10, 47, 95, 0.2);
   border-left-color: var(--accent);
@@ -1466,9 +1471,182 @@ a {
   background: var(--accent-soft);
 }
 
+.detailTaskMiddle::before,
+.detailTaskChild::before {
+  display: none;
+}
+
 .detailTask:target {
   outline: 3px solid rgba(10, 47, 95, 0.18);
   outline-offset: 3px;
+}
+
+.detailTaskSummary {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.4fr);
+  gap: 14px;
+  align-items: start;
+  padding-right: 2px;
+}
+
+.detailTaskTitleBlock {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.detailTaskTitleBlock h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.detailTaskChild .detailTaskTitleBlock h3 {
+  font-size: 15px;
+}
+
+.detailTaskTitleBlock p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.detailLevelMark {
+  color: #ffffff;
+  background: var(--accent);
+}
+
+.detailTaskChild .detailLevelMark {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.detailTaskBadges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.infoBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.neutralBadge {
+  border-color: var(--border);
+  color: var(--muted);
+  background: #f8fafc;
+}
+
+.categoryTone1 {
+  color: #ffffff;
+  background: #0a2f5f;
+}
+
+.categoryTone2 {
+  color: #0b3a66;
+  background: #dceeff;
+}
+
+.categoryTone3 {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.categoryTone4 {
+  color: #7c2d12;
+  background: #ffedd5;
+}
+
+.categoryTone5 {
+  color: #4c1d95;
+  background: #ede9fe;
+}
+
+.categoryTone6 {
+  color: #155e75;
+  background: #cffafe;
+}
+
+.categoryTone7 {
+  color: #831843;
+  background: #fce7f3;
+}
+
+.categoryTone8 {
+  color: #312e81;
+  background: #e0e7ff;
+}
+
+.categoryTone9 {
+  color: #1f2937;
+  background: #e5e7eb;
+}
+
+.statusTodoBadge {
+  color: #334155;
+  background: #e2e8f0;
+}
+
+.statusActiveBadge {
+  color: #075985;
+  background: #e0f2fe;
+}
+
+.statusReviewBadge {
+  color: #854d0e;
+  background: #fef3c7;
+}
+
+.statusDoneBadge {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.priorityHighBadge {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.priorityMediumBadge {
+  color: #854d0e;
+  background: #fef3c7;
+}
+
+.priorityLowBadge {
+  color: #334155;
+  background: #e2e8f0;
+}
+
+.dueBadgeOverdue {
+  color: #ffffff;
+  background: var(--danger);
+}
+
+.dueBadgeSoon {
+  color: #854d0e;
+  background: #fef3c7;
+}
+
+.detailTaskEditDetails {
+  margin-top: 6px;
+}
+
+.detailTaskEditDetails summary {
+  padding: 7px 0;
 }
 
 .detailEditForm {
@@ -1814,6 +1992,7 @@ a {
   .detailLayout,
   .detailSide,
   .detailCreateGrid,
+  .detailTaskSummary,
   .detailEditForm,
   .employeeGrid,
   .projectManagementForm,
@@ -1849,6 +2028,10 @@ a {
 
   .adminRow > .deleteForm {
     margin-top: 0;
+  }
+
+  .detailTaskBadges {
+    justify-content: flex-start;
   }
 }
 

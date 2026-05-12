@@ -457,7 +457,24 @@ function DetailTaskCard({
 
   return (
     <article className={`task detailTask ${task.task_level === TASK_LEVELS[0] ? "detailTaskMiddle" : "detailTaskChild"} ${state ? `due-${state}` : ""}`} id={`task-${task.id}`}>
-      <form action={updateProjectTask} className="detailEditForm">
+      <div className="detailTaskSummary">
+        <div className="detailTaskTitleBlock">
+          <span className="levelMark detailLevelMark">{task.task_level}</span>
+          <h3>{task.title}</h3>
+          {task.memo ? <p>{task.memo}</p> : null}
+        </div>
+        <div className="detailTaskBadges">
+          <span className={`infoBadge ${categoryBadgeClass(task.category)}`}>{task.category}</span>
+          <span className={`infoBadge ${statusBadgeClass(task.status)}`}>{task.status}</span>
+          <span className={`infoBadge ${priorityBadgeClass(task.priority)}`}>{`\u512a\u5148\u5ea6 ${task.priority}`}</span>
+          <span className="infoBadge neutralBadge">{`\u62c5\u5f53 ${task.owner}`}</span>
+          {task.requested_by_name ? <span className="infoBadge neutralBadge">{`\u4f9d\u983c ${task.requested_by_name}`}</span> : null}
+          <span className={`infoBadge ${state ? dueBadgeClass(state) : "neutralBadge"}`}>{task.due_date ? getDueLabel(task.due_date, state) : "\u671f\u9650 \u672a\u8a2d\u5b9a"}</span>
+        </div>
+      </div>
+      <details className="taskEditDetails detailTaskEditDetails">
+        <summary>{"\u5185\u5bb9\u3092\u4fee\u6b63"}</summary>
+        <form action={updateProjectTask} className="detailEditForm">
         <input type="hidden" name="project_id" value={projectId} />
         <input type="hidden" name="id" value={task.id} />
         <div className="field wideField">
@@ -543,7 +560,8 @@ function DetailTaskCard({
             保存
           </button>
         </div>
-      </form>
+        </form>
+      </details>
       <div className="taskMeta">
         {task.due_date ? <span>{getDueLabel(task.due_date, state)}</span> : <span>期限 未設定</span>}
         <span>担当 {task.owner}</span>
@@ -563,7 +581,30 @@ function DetailTaskCard({
 }
 
 function getRequesterDefaultValue(task: OperationTask) {
-  return task.requested_by_id ?? (task.requested_by_name === "社長" ? "__president__" : "");
+  return task.requested_by_id ?? (task.requested_by_name === "\u793e\u9577" ? "__president__" : "");
+}
+
+function categoryBadgeClass(category: OperationTask["category"]) {
+  const index = CATEGORIES.indexOf(category);
+  return `categoryBadge categoryTone${index >= 0 ? index + 1 : 1}`;
+}
+
+function statusBadgeClass(status: OperationTask["status"]) {
+  if (status === STATUSES[3]) return "statusDoneBadge";
+  if (status === STATUSES[2]) return "statusReviewBadge";
+  if (status === STATUSES[1]) return "statusActiveBadge";
+  return "statusTodoBadge";
+}
+
+function priorityBadgeClass(priority: OperationTask["priority"]) {
+  if (priority === PRIORITIES[2]) return "priorityHighBadge";
+  if (priority === PRIORITIES[1]) return "priorityMediumBadge";
+  return "priorityLowBadge";
+}
+
+function dueBadgeClass(state: NonNullable<ReturnType<typeof getDueState>>) {
+  if (state === "overdue") return "dueBadgeOverdue";
+  return "dueBadgeSoon";
 }
 
 function EventItem({ employees, event, projectId }: { employees: Employee[]; event: CalendarEvent; projectId: string }) {
