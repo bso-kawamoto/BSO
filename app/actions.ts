@@ -894,6 +894,43 @@ export async function updateProjectTask(formData: FormData) {
   redirect(`/projects/${projectId}?updated=success`);
 }
 
+export async function updateProjectTaskOrder(formData: FormData) {
+  const projectId = readNullableUuid(formData, "project_id");
+  const ids = formData
+    .getAll("task_ids")
+    .filter((value): value is string => typeof value === "string" && isUuid(value));
+
+  if (!projectId || ids.length === 0) {
+    redirect(projectId ? `/projects/${projectId}?updated=invalid` : "/?updated=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect(`/projects/${projectId}?updated=missing-env`);
+  }
+
+  const results = await Promise.all(
+    ids.map((id, index) =>
+      supabase
+        .from("operation_tasks")
+        .update({ sort_order: index })
+        .eq("id", id)
+        .eq("project_id", projectId)
+        .is("parent_task_id", null)
+    )
+  );
+  const error = results.find((result) => result.error)?.error;
+
+  if (error) {
+    console.error("Failed to update project task order:", error.message);
+    redirect(`/projects/${projectId}?updated=error`);
+  }
+
+  revalidateProjectViews(projectId);
+  redirect(`/projects/${projectId}?updated=success`);
+}
+
 export async function deleteProjectTask(formData: FormData) {
   const projectId = readNullableUuid(formData, "project_id");
   const id = readText(formData, "id");
@@ -1256,9 +1293,7 @@ function readNullableUuid(formData: FormData, key: string) {
     return null;
   }
 
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-    ? value
-    : null;
+  return isUuid(value) ? value : null;
 }
 
 function readBulkNullableUuid(formData: FormData, key: string) {
@@ -1272,7 +1307,11 @@ function readBulkNullableUuid(formData: FormData, key: string) {
     return undefined;
   }
 
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value) ? value : undefined;
+  return isUuid(value) ? value : undefined;
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 async function getProjectName(projectId: string) {

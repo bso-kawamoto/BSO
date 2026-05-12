@@ -8,6 +8,7 @@ import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
 import {
   CATEGORIES,
+  MIDDLE_TASK_TEMPLATES,
   PRIORITIES,
   STATUSES,
   TASK_LEVELS,
@@ -33,7 +34,7 @@ export default async function Home({
   const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
   const visibleCalendarEvents = calendarEvents;
   const visibleProjects = projects;
-  const middleTasks = visibleTasks.filter((task) => !task.parent_task_id);
+  const middleTasks = sortMiddleTasks(visibleTasks.filter((task) => !task.parent_task_id));
   const openTasks = visibleTasks.filter((task) => task.status !== STATUSES[3]);
   const highPriority = visibleTasks.filter((task) => task.priority === PRIORITIES[2]);
   const dueSoon = visibleTasks.filter((task) => task.due_date).slice(0, 4);
@@ -257,6 +258,19 @@ export default async function Home({
 
 function buildTaskTemplateTitles(tasks: OperationTask[]) {
   return [...new Set(tasks.map((task) => task.title).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja")).slice(0, 80);
+}
+
+function sortMiddleTasks(tasks: OperationTask[]) {
+  return [...tasks].sort((a, b) => getMiddleTaskOrder(a) - getMiddleTaskOrder(b) || a.created_at.localeCompare(b.created_at));
+}
+
+function getMiddleTaskOrder(task: OperationTask) {
+  if (typeof task.sort_order === "number") {
+    return task.sort_order;
+  }
+
+  const templateIndex = MIDDLE_TASK_TEMPLATES.findIndex((title) => title === task.title);
+  return templateIndex >= 0 ? templateIndex : 999;
 }
 
 function filterProjectsByQuery(projects: Project[], query: string) {

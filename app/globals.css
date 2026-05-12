@@ -1476,6 +1476,65 @@ a {
   gap: 16px;
 }
 
+.taskOrderPanel {
+  margin-bottom: 14px;
+  padding: 16px;
+}
+
+.taskOrderPanel summary {
+  color: var(--accent);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.taskOrderForm {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.taskOrderList {
+  display: grid;
+  gap: 8px;
+}
+
+.taskOrderItem {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fbfdff;
+  cursor: grab;
+}
+
+.taskOrderItemDragging {
+  opacity: 0.58;
+}
+
+.dragHandle {
+  color: var(--muted);
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.taskOrderNumber {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  color: #ffffff;
+  background: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .detailTaskList,
 .detailTaskGroup {
   display: grid;

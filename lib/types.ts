@@ -89,6 +89,7 @@ export type OperationTask = {
   requested_by_id: string | null;
   requested_by_name: string | null;
   due_date: string | null;
+  sort_order?: number | null;
   created_at: string;
   updated_at: string;
 };

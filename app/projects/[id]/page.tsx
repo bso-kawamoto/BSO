@@ -12,6 +12,7 @@ import {
   updateProjectDetails,
   updateProjectTask
 } from "@/app/actions";
+import { TaskOrderEditor } from "@/app/task-order-editor";
 import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
@@ -55,8 +56,8 @@ export default async function ProjectDetailPage({
   });
   const warningTasks = [...overdueTasks, ...soonTasks];
   const progress = projectTasks.length === 0 ? 0 : Math.round((completedTasks.length / projectTasks.length) * 100);
-  const middleTasks = activeProjectTasks.filter((task) => !task.parent_task_id);
-  const childTasks = activeProjectTasks.filter((task) => task.parent_task_id);
+  const middleTasks = sortMiddleTasks(activeProjectTasks.filter((task) => !task.parent_task_id));
+  const childTasks = sortChildTasks(activeProjectTasks.filter((task) => task.parent_task_id));
   const taskTemplateTitles = buildTaskTemplateTitles(visibleTasks);
   const notice = getNotice(query?.created, query?.schedule, query?.updated, query?.deleted, query?.project);
 
@@ -370,6 +371,7 @@ export default async function ProjectDetailPage({
                 <p className="mutedText">中タスクと小タスクを、この案件だけに絞って確認します。</p>
               </div>
             </div>
+            <TaskOrderEditor projectId={project.id} tasks={middleTasks.map((task) => ({ id: task.id, title: task.title }))} />
             <div className="detailTaskList">
               {middleTasks.length === 0 ? (
                 <div className="empty">この案件の未完了タスクはありません</div>
@@ -518,6 +520,23 @@ function Summary({ label, value }: { label: string; value: number }) {
 
 function buildTaskTemplateTitles(tasks: OperationTask[]) {
   return [...new Set(tasks.map((task) => task.title).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja")).slice(0, 80);
+}
+
+function sortMiddleTasks(tasks: OperationTask[]) {
+  return [...tasks].sort((a, b) => getMiddleTaskOrder(a) - getMiddleTaskOrder(b) || a.created_at.localeCompare(b.created_at));
+}
+
+function sortChildTasks(tasks: OperationTask[]) {
+  return [...tasks].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999) || a.created_at.localeCompare(b.created_at));
+}
+
+function getMiddleTaskOrder(task: OperationTask) {
+  if (typeof task.sort_order === "number") {
+    return task.sort_order;
+  }
+
+  const templateIndex = MIDDLE_TASK_TEMPLATES.findIndex((title) => title === task.title);
+  return templateIndex >= 0 ? templateIndex : 999;
 }
 
 function DetailTaskCard({
