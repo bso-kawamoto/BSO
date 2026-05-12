@@ -286,7 +286,8 @@ export async function createTask(formData: FormData) {
   const parentTaskId = readNullableUuid(formData, "parent_task_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requester = await readRequester(formData);
-  const taskLevel = readTaskLevel(formData) ?? "中タスク";
+  const requestedTaskLevel = readTaskLevel(formData) ?? TASK_LEVELS[0];
+  const taskLevel = parentTaskId ? TASK_LEVELS[1] : requestedTaskLevel;
   const memo = readLongText(formData, "memo");
   const dueDate = readOptionalDate(formData);
 
@@ -303,7 +304,7 @@ export async function createTask(formData: FormData) {
   const assigneeName = await getAssigneeName(assigneeId);
   const { error } = await supabase.from("operation_tasks").insert({
     project_id: projectId,
-    parent_task_id: taskLevel === "小タスク" ? parentTaskId : null,
+    parent_task_id: taskLevel === TASK_LEVELS[1] ? parentTaskId : null,
     assignee_id: assigneeId,
     task_level: taskLevel,
     title,
@@ -345,7 +346,8 @@ export async function createProjectTask(formData: FormData) {
   const parentTaskId = readNullableUuid(formData, "parent_task_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requester = await readRequester(formData);
-  const taskLevel = readTaskLevel(formData) ?? "中タスク";
+  const requestedTaskLevel = readTaskLevel(formData) ?? TASK_LEVELS[0];
+  const taskLevel = parentTaskId ? TASK_LEVELS[1] : requestedTaskLevel;
   const dueDate = readOptionalDate(formData);
   const memo = readLongText(formData, "memo");
 
@@ -362,7 +364,7 @@ export async function createProjectTask(formData: FormData) {
   const assigneeName = await getAssigneeName(assigneeId);
   const { error } = await supabase.from("operation_tasks").insert({
     project_id: projectId,
-    parent_task_id: taskLevel === "小タスク" ? parentTaskId : null,
+    parent_task_id: taskLevel === TASK_LEVELS[1] ? parentTaskId : null,
     assignee_id: assigneeId,
     task_level: taskLevel,
     title,
@@ -666,7 +668,8 @@ export async function updateTaskManagement(formData: FormData) {
   const parentTaskId = readNullableUuid(formData, "parent_task_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requester = await readRequester(formData);
-  const taskLevel = readTaskLevel(formData) ?? "中タスク";
+  const requestedTaskLevel = readTaskLevel(formData) ?? TASK_LEVELS[0];
+  const taskLevel = parentTaskId ? TASK_LEVELS[1] : requestedTaskLevel;
 
   const memo = readLongText(formData, "memo");
 
@@ -695,7 +698,7 @@ export async function updateTaskManagement(formData: FormData) {
       memo,
       due_date: dueDate,
       project_id: projectId,
-      parent_task_id: taskLevel === "小タスク" ? parentTaskId : null,
+      parent_task_id: taskLevel === TASK_LEVELS[1] ? parentTaskId : null,
       task_level: taskLevel
     })
     .eq("id", id);
@@ -786,7 +789,8 @@ export async function updateProjectTask(formData: FormData) {
   const parentTaskId = readNullableUuid(formData, "parent_task_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
   const requester = await readRequester(formData);
-  const taskLevel = readTaskLevel(formData) ?? "中タスク";
+  const requestedTaskLevel = readTaskLevel(formData) ?? TASK_LEVELS[0];
+  const taskLevel = parentTaskId ? TASK_LEVELS[1] : requestedTaskLevel;
   const memo = readLongText(formData, "memo");
 
   if (!projectId || !id || !title || !category || !status || !priority) {
@@ -814,7 +818,7 @@ export async function updateProjectTask(formData: FormData) {
       memo,
       due_date: dueDate,
       project_id: projectId,
-      parent_task_id: taskLevel === "小タスク" ? parentTaskId : null,
+      parent_task_id: taskLevel === TASK_LEVELS[1] ? parentTaskId : null,
       task_level: taskLevel
     })
     .eq("id", id);

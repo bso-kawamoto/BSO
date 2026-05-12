@@ -54,8 +54,8 @@ export default async function ProjectDetailPage({
   });
   const warningTasks = [...overdueTasks, ...soonTasks];
   const progress = projectTasks.length === 0 ? 0 : Math.round((completedTasks.length / projectTasks.length) * 100);
-  const middleTasks = activeProjectTasks.filter((task) => task.task_level === "中タスク" || !task.parent_task_id);
-  const childTasks = activeProjectTasks.filter((task) => task.task_level === "小タスク" && task.parent_task_id);
+  const middleTasks = activeProjectTasks.filter((task) => !task.parent_task_id);
+  const childTasks = activeProjectTasks.filter((task) => task.parent_task_id);
   const taskTemplateTitles = buildTaskTemplateTitles(visibleTasks);
   const notice = getNotice(query?.created, query?.schedule, query?.updated, query?.deleted, query?.project);
 
@@ -456,10 +456,10 @@ function DetailTaskCard({
   const state = getDueState(task.due_date);
 
   return (
-    <article className={`task detailTask ${task.task_level === TASK_LEVELS[0] ? "detailTaskMiddle" : "detailTaskChild"} ${state ? `due-${state}` : ""}`} id={`task-${task.id}`}>
+    <article className={`task detailTask ${task.parent_task_id ? "detailTaskChild" : "detailTaskMiddle"} ${state ? `due-${state}` : ""}`} id={`task-${task.id}`}>
       <div className="detailTaskSummary">
         <div className="detailTaskTitleBlock">
-          <span className="levelMark detailLevelMark">{task.task_level}</span>
+          <span className="levelMark detailLevelMark">{task.parent_task_id ? TASK_LEVELS[1] : TASK_LEVELS[0]}</span>
           <h3>{task.title}</h3>
           {task.memo ? <p>{task.memo}</p> : null}
         </div>
