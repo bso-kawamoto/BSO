@@ -920,6 +920,98 @@ export async function updateProjectTaskStatus(formData: FormData) {
   redirect(`/projects/${projectId}?updated=success#task-${id}`);
 }
 
+export async function bulkUpdateProjectTasks(formData: FormData) {
+  const projectId = readNullableUuid(formData, "project_id");
+  const ids = readTaskIds(formData).slice(0, 300);
+  const category = readOptionalCategory(formData, "bulk_category");
+  const status = readOptionalStatus(formData, "bulk_status");
+  const priority = readOptionalPriority(formData, "bulk_priority");
+  const assigneeId = readBulkNullableUuid(formData, "bulk_assignee_id");
+  const dueDate = readDate(formData, "bulk_due_date", false);
+  const clearDueDate = readBoolean(formData, "bulk_clear_due_date");
+
+  if (!projectId || ids.length === 0) {
+    redirect(projectId ? `/projects/${projectId}?updated=invalid` : "/?updated=invalid");
+  }
+
+  const updatePayload: {
+    assignee_id?: string | null;
+    category?: TaskCategory;
+    due_date?: string | null;
+    owner?: string;
+    priority?: TaskPriority;
+    status?: TaskStatus;
+  } = {};
+
+  if (category) updatePayload.category = category;
+  if (status) updatePayload.status = status;
+  if (priority) updatePayload.priority = priority;
+  if (assigneeId !== undefined) {
+    updatePayload.assignee_id = assigneeId;
+    updatePayload.owner = (await getAssigneeName(assigneeId)) ?? "未割当";
+  }
+  if (clearDueDate) {
+    updatePayload.due_date = null;
+  } else if (dueDate) {
+    updatePayload.due_date = dueDate;
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    redirect(`/projects/${projectId}?updated=empty`);
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect(`/projects/${projectId}?updated=missing-env`);
+  }
+
+  const { error } = await supabase
+    .from("operation_tasks")
+    .update(updatePayload)
+    .in("id", ids)
+    .eq("project_id", projectId)
+    .not("parent_task_id", "is", null);
+
+  if (error) {
+    console.error("Failed to bulk update project tasks:", error.message);
+    redirect(`/projects/${projectId}?updated=error`);
+  }
+
+  revalidateProjectViews(projectId);
+  redirect(`/projects/${projectId}?updated=bulk-success&count=${ids.length}`);
+}
+
+export async function bulkDeleteProjectTasks(formData: FormData) {
+  const projectId = readNullableUuid(formData, "project_id");
+  const ids = readTaskIds(formData).slice(0, 300);
+
+  if (!projectId || ids.length === 0) {
+    redirect(projectId ? `/projects/${projectId}?deleted=invalid` : "/?deleted=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect(`/projects/${projectId}?deleted=missing-env`);
+  }
+
+  const { error } = await supabase
+    .from("operation_tasks")
+    .delete()
+    .in("id", ids)
+    .eq("project_id", projectId)
+    .not("parent_task_id", "is", null);
+
+  if (error) {
+    console.error("Failed to bulk delete project tasks:", error.message);
+    redirect(`/projects/${projectId}?deleted=error`);
+  }
+
+  revalidateProjectViews(projectId);
+  redirect(`/projects/${projectId}?deleted=bulk-success&count=${ids.length}`);
+}
+
 export async function updateProjectTaskOrder(formData: FormData) {
   const projectId = readNullableUuid(formData, "project_id");
   const ids = formData
@@ -1176,6 +1268,10 @@ function readLongText(formData: FormData, key: string) {
 
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed.slice(0, 1000) : null;
+}
+
+function readTaskIds(formData: FormData) {
+  return formData.getAll("task_ids").filter((value): value is string => typeof value === "string" && isUuid(value));
 }
 
 function readTaskTitleLines(formData: FormData, key: string) {

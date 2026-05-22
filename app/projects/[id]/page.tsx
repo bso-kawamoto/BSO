@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   archiveProject,
+  bulkDeleteProjectTasks,
+  bulkUpdateProjectTasks,
   createProjectCalendarEvent,
   createProjectSubtasks,
   createProjectTask,
@@ -27,7 +29,7 @@ export default async function ProjectDetailPage({
   searchParams
 }: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ created?: string; deleted?: string; project?: string; schedule?: string; updated?: string }>;
+  searchParams?: Promise<{ count?: string; created?: string; deleted?: string; project?: string; schedule?: string; updated?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -59,8 +61,9 @@ export default async function ProjectDetailPage({
   const progress = projectTasks.length === 0 ? 0 : Math.round((completedTasks.length / projectTasks.length) * 100);
   const middleTasks = sortMiddleTasks(activeProjectTasks.filter((task) => !task.parent_task_id));
   const childTasks = sortChildTasks(activeProjectTasks.filter((task) => task.parent_task_id));
+  const selectableSubtaskCount = projectTasks.filter((task) => task.parent_task_id).length;
   const taskTemplateTitles = buildTaskTemplateTitles(visibleTasks);
-  const notice = getNotice(query?.created, query?.schedule, query?.updated, query?.deleted, query?.project);
+  const notice = getNotice(query?.created, query?.schedule, query?.updated, query?.deleted, query?.project, query?.count);
 
   return (
     <main className="page">
@@ -373,6 +376,68 @@ export default async function ProjectDetailPage({
               </div>
             </div>
             <TaskOrderEditor projectId={project.id} tasks={middleTasks.map((task) => ({ id: task.id, title: task.title }))} />
+            <details className="panel projectBulkTaskPanel">
+              <summary>小タスクをまとめて更新・削除</summary>
+              <p className="mutedText">各小タスクのチェックを入れてから、ステータス・担当者・期日などをまとめて変更できます。中タスクは標準カテゴリなので対象外です。</p>
+              <form action={bulkUpdateProjectTasks} className="projectBulkTaskForm" id="project-bulk-task-form">
+                <input type="hidden" name="project_id" value={project.id} />
+                <div className="field">
+                  <label htmlFor="project-bulk-status">ステータス</label>
+                  <select id="project-bulk-status" name="bulk_status" defaultValue="">
+                    <option value="">変更しない</option>
+                    {STATUSES.map((status) => (
+                      <option key={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="project-bulk-assignee">担当者</label>
+                  <select id="project-bulk-assignee" name="bulk_assignee_id" defaultValue="">
+                    <option value="">変更しない</option>
+                    <option value="__none__">未割当にする</option>
+                    {employeeOptions.map((employee) => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="project-bulk-category">カテゴリ</label>
+                  <select id="project-bulk-category" name="bulk_category" defaultValue="">
+                    <option value="">変更しない</option>
+                    {CATEGORIES.map((category) => (
+                      <option key={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="project-bulk-priority">優先度</label>
+                  <select id="project-bulk-priority" name="bulk_priority" defaultValue="">
+                    <option value="">変更しない</option>
+                    {PRIORITIES.map((priority) => (
+                      <option key={priority}>{priority}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="project-bulk-due">期日</label>
+                  <input id="project-bulk-due" name="bulk_due_date" type="date" />
+                </div>
+                <label className="checkField bulkCheckField" htmlFor="project-bulk-clear-due">
+                  <input id="project-bulk-clear-due" name="bulk_clear_due_date" type="checkbox" />
+                  <span>期日を空にする</span>
+                </label>
+                <div className="projectBulkActions">
+                  <button className="button" type="submit" disabled={selectableSubtaskCount === 0}>
+                    選択した小タスクを更新
+                  </button>
+                  <button className="dangerButton" formAction={bulkDeleteProjectTasks} type="submit" disabled={selectableSubtaskCount === 0}>
+                    選択した小タスクを削除
+                  </button>
+                </div>
+              </form>
+            </details>
             <div className="detailTaskList">
               {middleTasks.length === 0 ? (
                 <div className="empty">この案件の未完了タスクはありません</div>
@@ -392,6 +457,7 @@ export default async function ProjectDetailPage({
                         <div className="childTasks">
                           {children.map((child) => (
                             <DetailTaskCard
+                              bulkFormId="project-bulk-task-form"
                               employees={employeeOptions}
                               key={child.id}
                               parentCandidates={middleTasks.filter((candidate) => candidate.id !== child.id)}
@@ -410,7 +476,14 @@ export default async function ProjectDetailPage({
                   <summary>完了済みタスク {completedTasks.length}件</summary>
                   <div className="completedTaskList">
                     {completedTasks.map((task) => (
-                      <DetailTaskCard employees={employeeOptions} key={task.id} parentCandidates={middleTasks} projectId={project.id} task={task} />
+                      <DetailTaskCard
+                        bulkFormId={task.parent_task_id ? "project-bulk-task-form" : undefined}
+                        employees={employeeOptions}
+                        key={task.id}
+                        parentCandidates={middleTasks}
+                        projectId={project.id}
+                        task={task}
+                      />
                     ))}
                   </div>
                 </details>
@@ -462,7 +535,7 @@ function EmployeeSelect({
   );
 }
 
-function getNotice(created?: string, schedule?: string, updated?: string, deleted?: string, project?: string) {
+function getNotice(created?: string, schedule?: string, updated?: string, deleted?: string, project?: string, count?: string) {
   if (project === "updated") {
     return { kind: "noticeSuccess", message: "案件情報を更新しました。" };
   }
@@ -491,8 +564,20 @@ function getNotice(created?: string, schedule?: string, updated?: string, delete
     return { kind: "noticeSuccess", message: "タスクを更新しました。" };
   }
 
+  if (updated === "bulk-success") {
+    return { kind: "noticeSuccess", message: `選択した小タスク${count ?? ""}件をまとめて更新しました。` };
+  }
+
+  if (updated === "empty") {
+    return { kind: "noticeError", message: "一括更新する項目を選んでください。" };
+  }
+
   if (deleted === "success") {
     return { kind: "noticeSuccess", message: "タスクを削除しました。" };
+  }
+
+  if (deleted === "bulk-success") {
+    return { kind: "noticeSuccess", message: `選択した小タスク${count ?? ""}件をまとめて削除しました。` };
   }
 
   if (created === "missing-env" || schedule === "missing-env" || updated === "missing-env" || deleted === "missing-env" || project === "missing-env") {
@@ -541,11 +626,13 @@ function getMiddleTaskOrder(task: OperationTask) {
 }
 
 function DetailTaskCard({
+  bulkFormId,
   employees,
   parentCandidates,
   projectId,
   task
 }: {
+  bulkFormId?: string;
   employees: Employee[];
   parentCandidates: OperationTask[];
   projectId: string;
@@ -557,6 +644,12 @@ function DetailTaskCard({
     <article className={`task detailTask ${task.parent_task_id ? "detailTaskChild" : "detailTaskMiddle"} ${state ? `due-${state}` : ""}`} id={`task-${task.id}`}>
       <div className="detailTaskSummary">
         <div className="detailTaskTitleBlock">
+          {bulkFormId ? (
+            <label className="taskBulkCheck" htmlFor={`bulk-select-${task.id}`}>
+              <input form={bulkFormId} id={`bulk-select-${task.id}`} name="task_ids" type="checkbox" value={task.id} />
+              <span>一括対象</span>
+            </label>
+          ) : null}
           <span className="levelMark detailLevelMark">{task.parent_task_id ? TASK_LEVELS[1] : TASK_LEVELS[0]}</span>
           <h3>{task.title}</h3>
           {task.memo ? <p>{task.memo}</p> : null}

@@ -1481,6 +1481,62 @@ a {
   padding: 16px;
 }
 
+.projectBulkTaskPanel {
+  margin-bottom: 14px;
+  border-color: rgba(10, 47, 95, 0.18);
+  background: #fbfdff;
+}
+
+.projectBulkTaskPanel summary {
+  color: var(--accent);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.projectBulkTaskForm {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  gap: 10px;
+  align-items: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.projectBulkActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  grid-column: 1 / -1;
+}
+
+.projectBulkActions .button,
+.projectBulkActions .dangerButton {
+  min-width: 180px;
+}
+
+.taskBulkCheck {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  gap: 7px;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.taskBulkCheck input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
 .taskOrderPanel summary {
   color: var(--accent);
   font-weight: 900;
@@ -2165,6 +2221,7 @@ a {
   .detailTaskSummary,
   .detailEditForm,
   .employeeGrid,
+  .projectBulkTaskForm,
   .projectManagementForm,
   .projectManagementRow,
   .regularTaskForm,
@@ -2202,6 +2259,11 @@ a {
 
   .detailTaskBadges {
     justify-content: flex-start;
+  }
+
+  .projectBulkActions {
+    display: grid;
+    justify-content: stretch;
   }
 }
 
