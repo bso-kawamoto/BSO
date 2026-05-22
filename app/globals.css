@@ -353,6 +353,38 @@ a {
   background: #f9e2e5;
 }
 
+.toastNotice {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 40;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.5;
+}
+
+.toastSuccess {
+  color: var(--accent);
+  background: #f1f6fd;
+  border-color: rgba(10, 47, 95, 0.24);
+}
+
+.toastError {
+  color: var(--danger);
+  background: #fff1f3;
+  border-color: #f0b8bf;
+}
+
+.legacyBulkForm,
+.legacyStatusForm {
+  display: none;
+}
+
 .field {
   display: grid;
   gap: 6px;

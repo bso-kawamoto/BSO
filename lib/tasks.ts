@@ -23,6 +23,27 @@ export async function getCalendarEvents(): Promise<CalendarEvent[]> {
   return data ?? [];
 }
 
+export async function getCalendarEventsByProjectId(projectId: string): Promise<CalendarEvent[]> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return sampleCalendarEvents.filter((event) => event.project_id === projectId);
+  }
+
+  const { data, error } = await supabase
+    .from("calendar_events")
+    .select("id,project_id,assignee_id,title,event_date,end_date,is_all_day,start_time,end_time,location,memo,owner,created_at,updated_at")
+    .eq("project_id", projectId)
+    .order("event_date", { ascending: true });
+
+  if (error) {
+    console.error("Failed to fetch project calendar events:", error.message);
+    return sampleCalendarEvents.filter((event) => event.project_id === projectId);
+  }
+
+  return data ?? [];
+}
+
 export async function getEmployees(): Promise<Employee[]> {
   const supabase = createClient();
 
@@ -99,6 +120,27 @@ export async function getProjects(includeArchived = false): Promise<Project[]> {
   return data ?? [];
 }
 
+export async function getProjectById(id: string): Promise<Project | null> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return sampleProjects.find((project) => project.id === id) ?? null;
+  }
+
+  const { data, error } = await supabase
+    .from("projects")
+    .select("id,name,description,due_date,is_archived,created_at,updated_at")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Failed to fetch project:", error.message);
+    return sampleProjects.find((project) => project.id === id) ?? null;
+  }
+
+  return data;
+}
+
 export async function getTasks(): Promise<OperationTask[]> {
   const supabase = createClient();
 
@@ -123,6 +165,46 @@ export async function getTasks(): Promise<OperationTask[]> {
     if (legacyError) {
       console.error("Failed to fetch legacy operation tasks:", legacyError.message);
       return sampleTasks;
+    }
+
+    return (legacyData ?? []).map((task) => ({
+      ...task,
+      memo: null,
+      requested_by_id: null,
+      requested_by_name: null,
+      sort_order: null
+    }));
+  }
+
+  return data ?? [];
+}
+
+export async function getTasksByProjectId(projectId: string): Promise<OperationTask[]> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return sampleTasks.filter((task) => task.project_id === projectId);
+  }
+
+  const { data, error } = await supabase
+    .from("operation_tasks")
+    .select(
+      "id,project_id,parent_task_id,assignee_id,task_level,title,description,memo,status,category,priority,owner,requested_by_id,requested_by_name,due_date,sort_order,created_at,updated_at"
+    )
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to fetch project operation tasks:", error.message);
+    const { data: legacyData, error: legacyError } = await supabase
+      .from("operation_tasks")
+      .select("id,project_id,parent_task_id,assignee_id,task_level,title,description,status,category,priority,owner,due_date,created_at,updated_at")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false });
+
+    if (legacyError) {
+      console.error("Failed to fetch legacy project operation tasks:", legacyError.message);
+      return sampleTasks.filter((task) => task.project_id === projectId);
     }
 
     return (legacyData ?? []).map((task) => ({

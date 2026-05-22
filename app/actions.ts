@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AUTH_ACCESS_COOKIE, AUTH_REFRESH_COOKIE } from "@/lib/auth";
+import { revalidateProjectViews } from "@/lib/revalidate";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { sendTeamsDueAlerts, sendTeamsTaskAssignedAlert } from "@/lib/teams-notifier";
 import { getProjects, getTasks } from "@/lib/tasks";
@@ -1363,15 +1364,6 @@ function readSafeRedirect(formData: FormData) {
   }
 
   return value;
-}
-
-function revalidateProjectViews(projectId: string) {
-  revalidatePath("/");
-  revalidatePath("/admin");
-  revalidatePath("/calendar");
-  revalidatePath("/employees");
-  revalidatePath("/today");
-  revalidatePath(`/projects/${projectId}`);
 }
 
 async function notifyTaskAssigned({

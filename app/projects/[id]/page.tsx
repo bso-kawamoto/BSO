@@ -15,11 +15,13 @@ import {
   updateProjectTask,
   updateProjectTaskStatus
 } from "@/app/actions";
+import { ProjectBulkTaskForm } from "@/app/project-bulk-task-form";
+import { ProjectTaskStatusControl } from "@/app/project-task-status-control";
 import { TaskOrderEditor } from "@/app/task-order-editor";
 import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
-import { getCalendarEvents, getEmployees, getProjects, getTasks } from "@/lib/tasks";
+import { getCalendarEventsByProjectId, getEmployees, getProjectById, getTasksByProjectId } from "@/lib/tasks";
 import { CATEGORIES, MIDDLE_TASK_TEMPLATES, PRIORITIES, STATUSES, TASK_LEVELS, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +35,7 @@ export default async function ProjectDetailPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const [projects, tasks, calendarEvents, employees] = await Promise.all([getProjects(true), getTasks(), getCalendarEvents(), getEmployees()]);
+  const [project, tasks, projectEvents, employees] = await Promise.all([getProjectById(id), getTasksByProjectId(id), getCalendarEventsByProjectId(id), getEmployees()]);
   const viewer = await getCurrentViewer(employees);
 
   if (!viewer) {
@@ -41,15 +43,12 @@ export default async function ProjectDetailPage({
   }
 
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
-  const project = projects.find((item) => item.id === id);
-
   if (!project) {
     notFound();
   }
 
   const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
   const projectTasks = visibleTasks.filter((task) => task.project_id === project.id);
-  const projectEvents = calendarEvents.filter((event) => event.project_id === project.id);
   const completedTasks = projectTasks.filter((task) => task.status === "完了");
   const activeProjectTasks = projectTasks.filter((task) => task.status !== "完了");
   const overdueTasks = activeProjectTasks.filter((task) => getDueState(task.due_date) === "overdue");
@@ -379,7 +378,8 @@ export default async function ProjectDetailPage({
             <details className="panel projectBulkTaskPanel">
               <summary>小タスクをまとめて更新・削除</summary>
               <p className="mutedText">各小タスクのチェックを入れてから、ステータス・担当者・期日などをまとめて変更できます。中タスクは標準カテゴリなので対象外です。</p>
-              <form action={bulkUpdateProjectTasks} className="projectBulkTaskForm" id="project-bulk-task-form">
+              <ProjectBulkTaskForm disabled={selectableSubtaskCount === 0} employees={employeeOptions} formId="project-bulk-task-form" projectId={project.id} />
+              <form action={bulkUpdateProjectTasks} className="projectBulkTaskForm legacyBulkForm" id="legacy-project-bulk-task-form">
                 <input type="hidden" name="project_id" value={project.id} />
                 <div className="field">
                   <label htmlFor="project-bulk-status">ステータス</label>
@@ -661,7 +661,8 @@ function DetailTaskCard({
           {task.requested_by_name ? <span className="infoBadge neutralBadge">{`\u4f9d\u983c ${task.requested_by_name}`}</span> : null}
           <span className={`infoBadge ${state ? dueBadgeClass(state) : "neutralBadge"}`}>{task.due_date ? getDueLabel(task.due_date, state) : "\u671f\u9650 \u672a\u8a2d\u5b9a"}</span>
         </div>
-        <form action={updateProjectTaskStatus} className="projectStatusForm">
+        <ProjectTaskStatusControl initialStatus={task.status} projectId={projectId} taskId={task.id} />
+        <form action={updateProjectTaskStatus} className="projectStatusForm legacyStatusForm">
           <input type="hidden" name="project_id" value={projectId} />
           <input type="hidden" name="id" value={task.id} />
           <label htmlFor={`quick-status-${task.id}`}>ステータス</label>
