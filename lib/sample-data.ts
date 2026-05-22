@@ -1,4 +1,4 @@
-import type { CalendarEvent, Employee, OperationTask, RegularTask } from "@/lib/types";
+import type { CalendarEvent, Employee, OperationTask, Project, RegularTask } from "@/lib/types";
 
 export const sampleEmployees: Employee[] = [
   "河本",
@@ -25,10 +25,11 @@ export const sampleEmployees: Employee[] = [
   updated_at: "2026-04-29T00:00:00.000Z"
 }));
 
-export const sampleProjects = [
+export const sampleProjects: Project[] = [
   {
     id: "sample-project-1",
     name: "お伊勢さん杯",
+    category: "大会",
     description: "大会運営の準備案件",
     due_date: "2026-06-30",
     is_archived: false,

@@ -7,6 +7,7 @@ export type Database = {
         Row: {
           id: string;
           name: string;
+          category: TaskCategory;
           description: string | null;
           due_date: string | null;
           is_archived: boolean;
@@ -16,6 +17,7 @@ export type Database = {
         Insert: {
           id?: string;
           name: string;
+          category?: TaskCategory;
           description?: string | null;
           due_date?: string | null;
           is_archived?: boolean;
@@ -25,6 +27,7 @@ export type Database = {
         Update: {
           id?: string;
           name?: string;
+          category?: TaskCategory;
           description?: string | null;
           due_date?: string | null;
           is_archived?: boolean;

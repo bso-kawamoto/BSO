@@ -39,6 +39,7 @@ export type Employee = {
 export type Project = {
   id: string;
   name: string;
+  category: TaskCategory;
   description: string | null;
   due_date: string | null;
   is_archived: boolean;

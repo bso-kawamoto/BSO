@@ -85,6 +85,7 @@ export default async function ProjectDetailPage({
         <section className="detailHero">
           <div>
             <h1>{project.name}</h1>
+            <span className="levelMark">{project.category}</span>
             <p>{project.due_date ? `案件期日 ${project.due_date}` : "案件期日 未設定"}</p>
           </div>
           <div className="progressPanel">
@@ -137,6 +138,14 @@ export default async function ProjectDetailPage({
                 <div className="field">
                   <label htmlFor="project-name-edit">案件名</label>
                   <input id="project-name-edit" name="project_name" defaultValue={project.name} maxLength={120} required />
+                </div>
+                <div className="field">
+                  <label htmlFor="project-category-edit">カテゴリ</label>
+                  <select id="project-category-edit" name="category" defaultValue={project.category}>
+                    {CATEGORIES.map((category) => (
+                      <option key={category}>{category}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="field">
                   <label htmlFor="project-due-edit">案件期日</label>

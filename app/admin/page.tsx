@@ -286,6 +286,14 @@ function ProjectManagementRow({ project }: { project: Project }) {
           <input id={`project-name-${project.id}`} name="project_name" defaultValue={project.name} maxLength={120} required />
         </div>
         <div className="field">
+          <label htmlFor={`project-category-${project.id}`}>カテゴリ</label>
+          <select id={`project-category-${project.id}`} name="category" defaultValue={project.category}>
+            {CATEGORIES.map((category) => (
+              <option key={category}>{category}</option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
           <label htmlFor={`project-due-${project.id}`}>期日</label>
           <input id={`project-due-${project.id}`} name="project_due_date" type="date" defaultValue={project.due_date ?? ""} />
         </div>

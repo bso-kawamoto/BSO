@@ -1,8 +1,12 @@
 import type { CurrentViewer } from "@/lib/auth";
-import type { Employee, OperationTask } from "@/lib/types";
+import type { Employee, OperationTask, TaskCategory } from "@/lib/types";
 
-const MERCHANDISE_CATEGORY = "物販";
-const MERCHANDISE_TEAM_NAMES = ["高橋", "安藤", "草間", "宮田", "上野"];
+const CATEGORY_TEAM_NAMES = {
+  大会: ["高橋", "大鋸", "松本", "安藤", "平賀", "天木", "大橋"],
+  物販: ["高橋", "安藤", "草間", "宮田", "上野"],
+  チーム: ["大鋸", "高橋", "安藤"]
+} as const;
+
 const PART_TIME_NAMES = ["安藤", "宮田", "草間", "上野", "天木", "大橋", "花里"];
 const PART_TIME_LEADER_NAMES = ["安藤"];
 
@@ -35,7 +39,7 @@ function canViewerSeeTask(task: OperationTask, viewer: CurrentViewer, employees:
     return true;
   }
 
-  if (task.category === MERCHANDISE_CATEGORY && isMerchandiseTeamMember(viewer.name)) {
+  if (canViewerSeeCategory(task.category, viewer.name)) {
     return true;
   }
 
@@ -47,8 +51,9 @@ function canViewerSeeTask(task: OperationTask, viewer: CurrentViewer, employees:
   return false;
 }
 
-function isMerchandiseTeamMember(name: string) {
-  return MERCHANDISE_TEAM_NAMES.includes(name);
+function canViewerSeeCategory(category: TaskCategory, viewerName: string) {
+  const teams = CATEGORY_TEAM_NAMES as Partial<Record<TaskCategory, readonly string[]>>;
+  return Boolean(teams[category]?.includes(viewerName));
 }
 
 function isPartTimeLeader(name: string) {

@@ -86,6 +86,7 @@ export async function sendTeamsDueAlert() {
 
 export async function createProject(formData: FormData) {
   const name = readText(formData, "name");
+  const category = readCategory(formData) ?? CATEGORIES[0];
   const dueDate = readOptionalDate(formData);
 
   if (!name) {
@@ -102,6 +103,7 @@ export async function createProject(formData: FormData) {
     .from("projects")
     .insert({
     name,
+    category,
     description: null,
     due_date: dueDate
     })
@@ -145,6 +147,7 @@ export async function createProject(formData: FormData) {
 export async function updateProjectDetails(formData: FormData) {
   const id = readNullableUuid(formData, "project_id");
   const name = readText(formData, "project_name");
+  const category = readCategory(formData) ?? CATEGORIES[0];
   const dueDate = readDate(formData, "project_due_date", false);
 
   if (!id || !name) {
@@ -161,6 +164,7 @@ export async function updateProjectDetails(formData: FormData) {
     .from("projects")
     .update({
       name,
+      category,
       due_date: dueDate
     })
     .eq("id", id);
@@ -177,6 +181,7 @@ export async function updateProjectDetails(formData: FormData) {
 export async function updateProjectManagement(formData: FormData) {
   const id = readNullableUuid(formData, "project_id");
   const name = readText(formData, "project_name");
+  const category = readCategory(formData) ?? CATEGORIES[0];
   const dueDate = readDate(formData, "project_due_date", false);
 
   if (!id || !name) {
@@ -193,6 +198,7 @@ export async function updateProjectManagement(formData: FormData) {
     .from("projects")
     .update({
       name,
+      category,
       due_date: dueDate
     })
     .eq("id", id);

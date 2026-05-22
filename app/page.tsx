@@ -119,6 +119,14 @@ export default async function Home({
                     <input id="project-name" name="name" maxLength={120} placeholder="例: お伊勢さん杯" required />
                   </div>
                   <div className="field">
+                    <label htmlFor="project-category">カテゴリ</label>
+                    <select id="project-category" name="category" defaultValue={CATEGORIES[0]}>
+                      {CATEGORIES.map((category) => (
+                        <option key={category}>{category}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
                     <label htmlFor="project-due">案件期日</label>
                     <input id="project-due" name="due_date" type="date" />
                   </div>
@@ -653,6 +661,7 @@ function ProjectCard({ project, tasks }: { project: Project | null; tasks: Opera
       <header className="projectHeader">
         <div>
           <h3>{project?.name ?? "案件なし"}</h3>
+          {project ? <span className="levelMark">{project.category}</span> : null}
           <p>{project?.due_date ? `案件期日 ${project.due_date}` : "案件期日 未設定"}</p>
         </div>
         <div className="projectHeaderActions">

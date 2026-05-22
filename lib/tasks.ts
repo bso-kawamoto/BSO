@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
 import { sampleCalendarEvents, sampleEmployees, sampleProjects, sampleRegularTasks, sampleTasks } from "@/lib/sample-data";
-import type { CalendarEvent, Employee, OperationTask, Project, RegularTask } from "@/lib/types";
+import { CATEGORIES, type CalendarEvent, type Employee, type OperationTask, type Project, type RegularTask } from "@/lib/types";
 
 export async function getCalendarEvents(): Promise<CalendarEvent[]> {
   const supabase = createClient();
@@ -90,7 +90,7 @@ export async function getProjects(includeArchived = false): Promise<Project[]> {
 
   let query = supabase
     .from("projects")
-    .select("id,name,description,due_date,is_archived,created_at,updated_at")
+    .select("id,name,category,description,due_date,is_archived,created_at,updated_at")
     .order("created_at", { ascending: false });
 
   if (!includeArchived) {
@@ -113,6 +113,7 @@ export async function getProjects(includeArchived = false): Promise<Project[]> {
 
     return (legacyData ?? []).map((project) => ({
       ...project,
+      category: CATEGORIES[0],
       is_archived: false
     }));
   }
@@ -129,13 +130,24 @@ export async function getProjectById(id: string): Promise<Project | null> {
 
   const { data, error } = await supabase
     .from("projects")
-    .select("id,name,description,due_date,is_archived,created_at,updated_at")
+    .select("id,name,category,description,due_date,is_archived,created_at,updated_at")
     .eq("id", id)
     .maybeSingle();
 
   if (error) {
     console.error("Failed to fetch project:", error.message);
-    return sampleProjects.find((project) => project.id === id) ?? null;
+    const { data: legacyData, error: legacyError } = await supabase
+      .from("projects")
+      .select("id,name,description,due_date,is_archived,created_at,updated_at")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (legacyError) {
+      console.error("Failed to fetch legacy project:", legacyError.message);
+      return sampleProjects.find((project) => project.id === id) ?? null;
+    }
+
+    return legacyData ? { ...legacyData, category: CATEGORIES[0] } : null;
   }
 
   return data;
