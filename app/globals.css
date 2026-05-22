@@ -381,6 +381,7 @@ a {
 }
 
 .legacyBulkForm,
+.legacyProjectSearch,
 .legacyStatusForm {
   display: none;
 }

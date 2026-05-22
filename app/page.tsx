@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createCalendarEvent, createProject, logout, updateTaskDetails, updateTaskStatus } from "@/app/actions";
+import { ProjectBoardClient } from "@/app/project-board-client";
 import { QuickTaskForm } from "@/app/quick-task-form";
 import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
@@ -206,6 +207,8 @@ export default async function Home({
         </section>
 
         <section className="section" id="projects" aria-label="Project task hierarchy">
+          <ProjectBoardClient initialQuery={projectQuery} initialSort={params?.sort} projects={visibleProjects} tasks={visibleTasks} />
+          <div className="legacyProjectSearch">
           <div className="sectionHeader">
             <div>
               <h2>案件別タスク</h2>
@@ -241,6 +244,7 @@ export default async function Home({
               <ProjectCard key={project.id} project={project} tasks={visibleTasks.filter((task) => task.project_id === project.id)} />
             ))}
             {sortedProjects.length === 0 ? <div className="empty">条件に合う案件がありません</div> : null}
+          </div>
           </div>
           {!projectQuery && unassignedProjectTasks.length > 0 ? (
             <section className="unassignedTaskPanel" aria-label="Tasks without project">
