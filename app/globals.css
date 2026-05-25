@@ -2145,18 +2145,22 @@ a {
 
 .todayTaskActions {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(220px, 1fr);
   gap: 8px;
   align-items: end;
   margin-top: 6px;
 }
 
 .todayTaskActions .projectStatusForm {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(150px, 1fr) auto;
 }
 
 .todayTaskActions .projectStatusForm label {
   font-size: 11px;
+}
+
+.todayStatusForm select {
+  min-width: 150px;
 }
 
 .employeeTaskMeta {
@@ -2313,6 +2317,10 @@ a {
   .projectBulkActions {
     display: grid;
     justify-content: stretch;
+  }
+
+  .todayTaskActions {
+    grid-template-columns: 1fr;
   }
 }
 

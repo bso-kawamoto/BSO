@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { ProjectTaskStatusControl } from "@/app/project-task-status-control";
+import { TodayTaskRow } from "@/app/today-task-row";
 import { getCurrentViewer } from "@/lib/auth";
 import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getRegularTasks, getTasks } from "@/lib/tasks";
-import { STATUSES, type OperationTask } from "@/lib/types";
+import { STATUSES } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -81,17 +81,17 @@ export default async function TodayPage() {
           </TodayColumn>
 
           <TodayColumn title="期限切れ">
-            {overdueTasks.map((task) => <TaskRow key={task.id} projectName={projectById.get(task.project_id ?? "")} task={task} />)}
+            {overdueTasks.map((task) => <TodayTaskRow key={task.id} projectName={projectById.get(task.project_id ?? "")} task={task} />)}
             {overdueTasks.length === 0 ? <div className="empty">期限切れなし</div> : null}
           </TodayColumn>
 
           <TodayColumn title="今日が期日">
-            {todayTasks.map((task) => <TaskRow key={task.id} projectName={projectById.get(task.project_id ?? "")} task={task} />)}
+            {todayTasks.map((task) => <TodayTaskRow key={task.id} projectName={projectById.get(task.project_id ?? "")} task={task} />)}
             {todayTasks.length === 0 ? <div className="empty">今日期日のタスクなし</div> : null}
           </TodayColumn>
 
           <TodayColumn title="3日以内">
-            {soonTasks.map((task) => <TaskRow key={task.id} projectName={projectById.get(task.project_id ?? "")} task={task} />)}
+            {soonTasks.map((task) => <TodayTaskRow key={task.id} projectName={projectById.get(task.project_id ?? "")} task={task} />)}
             {soonTasks.length === 0 ? <div className="empty">近日期限なし</div> : null}
           </TodayColumn>
         </section>
@@ -106,31 +106,6 @@ function TodayColumn({ children, title }: { children: ReactNode; title: string }
       <h2>{title}</h2>
       <div className="upcomingList">{children}</div>
     </section>
-  );
-}
-
-function TaskRow({
-  projectName,
-  task
-}: {
-  projectName?: string;
-  task: OperationTask;
-}) {
-  return (
-    <article className="warningItem">
-      <strong>{task.title}</strong>
-      <span>
-        {projectName ?? "案件なし"} / {task.owner} / {task.due_date ?? "期限なし"}
-      </span>
-      <div className="todayTaskActions">
-        {task.project_id ? (
-          <Link className="detailLink" href={`/projects/${task.project_id}#task-${task.id}`}>
-            案件へ
-          </Link>
-        ) : null}
-        <ProjectTaskStatusControl initialStatus={task.status} projectId={task.project_id} taskId={task.id} />
-      </div>
-    </article>
   );
 }
 
