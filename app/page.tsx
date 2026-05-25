@@ -45,7 +45,7 @@ export default async function Home({
   const sortedProjects = sortProjects(filteredProjects, visibleTasks, params?.sort);
   const employeeOptions = sortEmployeesForDisplay(employees, viewer.employee?.id);
   const taskTemplateTitles = buildTaskTemplateTitles(tasks);
-  const unassignedProjectTasks = visibleTasks.filter((task) => !task.project_id);
+  const unassignedProjectTasks = visibleTasks.filter((task) => !task.project_id && task.status !== STATUSES[3]);
 
   return (
     <main className="page">
