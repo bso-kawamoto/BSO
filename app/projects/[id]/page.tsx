@@ -2,8 +2,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import {
   archiveProject,
-  bulkDeleteProjectTasks,
-  bulkUpdateProjectTasks,
   createProjectCalendarEvent,
   createProjectSubtasks,
   createProjectTask,
@@ -388,64 +386,6 @@ export default async function ProjectDetailPage({
               <summary>小タスクをまとめて更新・削除</summary>
               <p className="mutedText">各小タスクのチェックを入れてから、ステータス・担当者・期日などをまとめて変更できます。中タスクは標準カテゴリなので対象外です。</p>
               <ProjectBulkTaskForm disabled={selectableSubtaskCount === 0} employees={employeeOptions} formId="project-bulk-task-form" projectId={project.id} />
-              <form action={bulkUpdateProjectTasks} className="projectBulkTaskForm legacyBulkForm" id="legacy-project-bulk-task-form">
-                <input type="hidden" name="project_id" value={project.id} />
-                <div className="field">
-                  <label htmlFor="project-bulk-status">ステータス</label>
-                  <select id="project-bulk-status" name="bulk_status" defaultValue="">
-                    <option value="">変更しない</option>
-                    {STATUSES.map((status) => (
-                      <option key={status}>{status}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="project-bulk-assignee">担当者</label>
-                  <select id="project-bulk-assignee" name="bulk_assignee_id" defaultValue="">
-                    <option value="">変更しない</option>
-                    <option value="__none__">未割当にする</option>
-                    {employeeOptions.map((employee) => (
-                      <option key={employee.id} value={employee.id}>
-                        {employee.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="project-bulk-category">カテゴリ</label>
-                  <select id="project-bulk-category" name="bulk_category" defaultValue="">
-                    <option value="">変更しない</option>
-                    {CATEGORIES.map((category) => (
-                      <option key={category}>{category}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="project-bulk-priority">優先度</label>
-                  <select id="project-bulk-priority" name="bulk_priority" defaultValue="">
-                    <option value="">変更しない</option>
-                    {PRIORITIES.map((priority) => (
-                      <option key={priority}>{priority}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="project-bulk-due">期日</label>
-                  <input id="project-bulk-due" name="bulk_due_date" type="date" />
-                </div>
-                <label className="checkField bulkCheckField" htmlFor="project-bulk-clear-due">
-                  <input id="project-bulk-clear-due" name="bulk_clear_due_date" type="checkbox" />
-                  <span>期日を空にする</span>
-                </label>
-                <div className="projectBulkActions">
-                  <button className="button" type="submit" disabled={selectableSubtaskCount === 0}>
-                    選択した小タスクを更新
-                  </button>
-                  <button className="dangerButton" formAction={bulkDeleteProjectTasks} type="submit" disabled={selectableSubtaskCount === 0}>
-                    選択した小タスクを削除
-                  </button>
-                </div>
-              </form>
             </details>
             <div className="detailTaskList">
               {middleTasks.length === 0 ? (
