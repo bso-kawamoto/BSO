@@ -2143,6 +2143,22 @@ a {
   line-height: 1.55;
 }
 
+.todayTaskActions {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: end;
+  margin-top: 6px;
+}
+
+.todayTaskActions .projectStatusForm {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.todayTaskActions .projectStatusForm label {
+  font-size: 11px;
+}
+
 .employeeTaskMeta {
   display: flex;
   gap: 6px;

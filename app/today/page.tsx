@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { ProjectTaskStatusControl } from "@/app/project-task-status-control";
 import { getCurrentViewer } from "@/lib/auth";
 import { filterTasksForViewer } from "@/lib/task-visibility";
 import { getCalendarEvents, getEmployees, getProjects, getRegularTasks, getTasks } from "@/lib/tasks";
+import { STATUSES, type OperationTask } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +20,11 @@ export default async function TodayPage() {
   const visibleTasks = filterTasksForViewer(tasks, viewer, employees);
   const todayKey = formatDateKey(new Date());
   const todayEvents = events.filter((event) => isDateWithin(todayKey, event.event_date, event.end_date ?? event.event_date));
-  const overdueTasks = visibleTasks.filter((task) => task.status !== "完了" && getDiffDays(task.due_date) < 0);
-  const todayTasks = visibleTasks.filter((task) => task.status !== "完了" && getDiffDays(task.due_date) === 0);
+  const overdueTasks = visibleTasks.filter((task) => task.status !== STATUSES[3] && getDiffDays(task.due_date) < 0);
+  const todayTasks = visibleTasks.filter((task) => task.status !== STATUSES[3] && getDiffDays(task.due_date) === 0);
   const soonTasks = visibleTasks.filter((task) => {
     const diff = getDiffDays(task.due_date);
-    return task.status !== "完了" && diff > 0 && diff <= 3;
+    return task.status !== STATUSES[3] && diff > 0 && diff <= 3;
   });
   const visibleRegularTasks = viewer.isAdmin ? regularTasks : regularTasks.filter((task) => task.assignee_id === viewer.employee?.id);
   const projectById = new Map(projects.map((project) => [project.id, project.name]));
@@ -112,7 +114,7 @@ function TaskRow({
   task
 }: {
   projectName?: string;
-  task: { due_date: string | null; owner: string; project_id: string | null; title: string };
+  task: OperationTask;
 }) {
   return (
     <article className="warningItem">
@@ -120,6 +122,14 @@ function TaskRow({
       <span>
         {projectName ?? "案件なし"} / {task.owner} / {task.due_date ?? "期限なし"}
       </span>
+      <div className="todayTaskActions">
+        {task.project_id ? (
+          <Link className="detailLink" href={`/projects/${task.project_id}#task-${task.id}`}>
+            案件へ
+          </Link>
+        ) : null}
+        <ProjectTaskStatusControl initialStatus={task.status} projectId={task.project_id} taskId={task.id} />
+      </div>
     </article>
   );
 }

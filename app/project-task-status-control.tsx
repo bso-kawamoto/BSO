@@ -10,7 +10,7 @@ export function ProjectTaskStatusControl({
   taskId
 }: {
   initialStatus: TaskStatus;
-  projectId: string;
+  projectId: string | null;
   taskId: string;
 }) {
   const router = useRouter();
