@@ -609,9 +609,9 @@ a {
 .childTasks {
   display: grid;
   gap: 8px;
-  margin-left: 18px;
-  padding-left: 12px;
-  border-left: 3px solid var(--accent-soft);
+  margin-left: 0;
+  padding-left: 14px;
+  border-left: 3px solid rgba(10, 47, 95, 0.12);
 }
 
 .column {
@@ -1535,7 +1535,7 @@ a {
 
 .projectRegularTaskForm {
   display: grid;
-  grid-template-columns: minmax(220px, 1.2fr) minmax(160px, 0.8fr) minmax(240px, 1fr) auto;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(160px, 0.8fr) minmax(240px, 1fr) minmax(150px, auto);
   gap: 10px;
   align-items: end;
 }
@@ -1547,7 +1547,7 @@ a {
 
 .projectRegularTaskItem {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) minmax(128px, auto) minmax(88px, auto);
   gap: 12px;
   align-items: center;
   padding: 12px;
@@ -1576,6 +1576,7 @@ a {
   display: grid;
   gap: 4px;
   justify-items: end;
+  min-width: 0;
 }
 
 .projectRegularCheck span {
@@ -1745,7 +1746,7 @@ a {
 
 .detailTaskSummary {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(260px, 1.1fr) minmax(220px, 0.78fr);
+  grid-template-columns: minmax(260px, 1fr) minmax(220px, 0.9fr) minmax(210px, 0.72fr);
   gap: 16px;
   align-items: start;
   min-height: 62px;
@@ -1793,6 +1794,25 @@ a {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 7px;
+}
+
+@media (max-width: 1180px) {
+  .detailTaskSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .detailTaskBadges {
+    justify-content: flex-start;
+  }
+
+  .projectRegularTaskForm,
+  .projectRegularTaskItem {
+    grid-template-columns: 1fr;
+  }
+
+  .projectRegularCheck {
+    justify-items: stretch;
+  }
 }
 
 .projectStatusForm {
