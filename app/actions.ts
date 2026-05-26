@@ -1346,6 +1346,63 @@ export async function deleteRegularTask(formData: FormData) {
   redirect("/admin?regular=deleted");
 }
 
+export async function createProjectRegularTask(formData: FormData) {
+  const projectId = readNullableUuid(formData, "project_id");
+  const assigneeId = readNullableUuid(formData, "assignee_id");
+  const title = readText(formData, "title");
+  const memo = readLongText(formData, "memo");
+
+  if (!projectId || !title) {
+    redirect(projectId ? `/projects/${projectId}?regular=invalid` : "/?regular=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect(`/projects/${projectId}?regular=missing-env`);
+  }
+
+  const { error } = await supabase.from("project_regular_tasks").insert({
+    project_id: projectId,
+    assignee_id: assigneeId,
+    title,
+    memo
+  });
+
+  if (error) {
+    console.error("Failed to create project regular task:", error.message);
+    redirect(`/projects/${projectId}?regular=error`);
+  }
+
+  revalidateProjectViews(projectId);
+  redirect(`/projects/${projectId}?regular=success`);
+}
+
+export async function deleteProjectRegularTask(formData: FormData) {
+  const projectId = readNullableUuid(formData, "project_id");
+  const id = readNullableUuid(formData, "id");
+
+  if (!projectId || !id) {
+    redirect(projectId ? `/projects/${projectId}?regular=invalid` : "/?regular=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect(`/projects/${projectId}?regular=missing-env`);
+  }
+
+  const { error } = await supabase.from("project_regular_tasks").update({ is_active: false }).eq("id", id).eq("project_id", projectId);
+
+  if (error) {
+    console.error("Failed to delete project regular task:", error.message);
+    redirect(`/projects/${projectId}?regular=error`);
+  }
+
+  revalidateProjectViews(projectId);
+  redirect(`/projects/${projectId}?regular=deleted`);
+}
+
 export async function deleteTask(formData: FormData) {
   const manager = readManager(formData);
   const id = readText(formData, "id");

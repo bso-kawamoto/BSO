@@ -74,6 +74,27 @@ export type RegularTask = {
   updated_at: string;
 };
 
+export type ProjectRegularTaskCheck = {
+  id: string;
+  regular_task_id: string;
+  week_start_date: string;
+  checked_by_id: string | null;
+  checked_at: string;
+  created_at: string;
+};
+
+export type ProjectRegularTask = {
+  id: string;
+  project_id: string;
+  assignee_id: string | null;
+  title: string;
+  memo: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  current_week_check?: ProjectRegularTaskCheck | null;
+};
+
 export type OperationTask = {
   id: string;
   project_id: string | null;

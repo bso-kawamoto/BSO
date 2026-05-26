@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
 import { sampleCalendarEvents, sampleEmployees, sampleProjects, sampleRegularTasks, sampleTasks } from "@/lib/sample-data";
-import { CATEGORIES, type CalendarEvent, type Employee, type OperationTask, type Project, type RegularTask } from "@/lib/types";
+import { CATEGORIES, type CalendarEvent, type Employee, type OperationTask, type Project, type ProjectRegularTask, type RegularTask } from "@/lib/types";
 
 export async function getCalendarEvents(): Promise<CalendarEvent[]> {
   const supabase = createClient();
@@ -250,4 +250,46 @@ export async function getRegularTasks(): Promise<RegularTask[]> {
   }
 
   return data ?? [];
+}
+
+export async function getProjectRegularTasksByProjectId(projectId: string, weekStartDate: string): Promise<ProjectRegularTask[]> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data: regularTasks, error } = await supabase
+    .from("project_regular_tasks")
+    .select("id,project_id,assignee_id,title,memo,is_active,created_at,updated_at")
+    .eq("project_id", projectId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Failed to fetch project regular tasks:", error.message);
+    return [];
+  }
+
+  const taskIds = (regularTasks ?? []).map((task) => task.id);
+
+  if (taskIds.length === 0) {
+    return [];
+  }
+
+  const { data: checks, error: checksError } = await supabase
+    .from("project_regular_task_checks")
+    .select("id,regular_task_id,week_start_date,checked_by_id,checked_at,created_at")
+    .eq("week_start_date", weekStartDate)
+    .in("regular_task_id", taskIds);
+
+  if (checksError) {
+    console.error("Failed to fetch project regular task checks:", checksError.message);
+  }
+
+  const checkByTaskId = new Map((checks ?? []).map((check) => [check.regular_task_id, check]));
+  return (regularTasks ?? []).map((task) => ({
+    ...task,
+    current_week_check: checkByTaskId.get(task.id) ?? null
+  }));
 }

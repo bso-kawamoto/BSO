@@ -3,10 +3,12 @@ import { notFound, redirect } from "next/navigation";
 import {
   archiveProject,
   createProjectCalendarEvent,
+  createProjectRegularTask,
   createProjectSubtasks,
   createProjectTask,
   applyTournamentTaskTemplate,
   deleteProjectCalendarEvent,
+  deleteProjectRegularTask,
   deleteProjectTask,
   restoreProject,
   updateProjectCalendarEvent,
@@ -15,13 +17,15 @@ import {
   updateProjectTaskStatus
 } from "@/app/actions";
 import { ProjectBulkTaskForm } from "@/app/project-bulk-task-form";
+import { ProjectRegularTaskCheck } from "@/app/project-regular-task-check";
 import { ProjectTaskStatusControl } from "@/app/project-task-status-control";
 import { TaskOrderEditor } from "@/app/task-order-editor";
 import { getCurrentViewer } from "@/lib/auth";
 import { sortEmployeesForDisplay } from "@/lib/employee-order";
 import { filterTasksForViewer } from "@/lib/task-visibility";
-import { getCalendarEventsByProjectId, getEmployees, getProjectById, getTasksByProjectId } from "@/lib/tasks";
-import { CATEGORIES, MIDDLE_TASK_TEMPLATES, PRIORITIES, STATUSES, TASK_LEVELS, type CalendarEvent, type Employee, type OperationTask } from "@/lib/types";
+import { getCalendarEventsByProjectId, getEmployees, getProjectById, getProjectRegularTasksByProjectId, getTasksByProjectId } from "@/lib/tasks";
+import { CATEGORIES, MIDDLE_TASK_TEMPLATES, PRIORITIES, STATUSES, TASK_LEVELS, type CalendarEvent, type Employee, type OperationTask, type ProjectRegularTask } from "@/lib/types";
+import { getTokyoWeekStartDate } from "@/lib/week";
 
 export const dynamic = "force-dynamic";
 
@@ -30,11 +34,18 @@ export default async function ProjectDetailPage({
   searchParams
 }: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ count?: string; created?: string; deleted?: string; project?: string; schedule?: string; updated?: string }>;
+  searchParams?: Promise<{ count?: string; created?: string; deleted?: string; project?: string; regular?: string; schedule?: string; updated?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const [project, tasks, projectEvents, employees] = await Promise.all([getProjectById(id), getTasksByProjectId(id), getCalendarEventsByProjectId(id), getEmployees()]);
+  const weekStartDate = getTokyoWeekStartDate();
+  const [project, tasks, projectEvents, employees, projectRegularTasks] = await Promise.all([
+    getProjectById(id),
+    getTasksByProjectId(id),
+    getCalendarEventsByProjectId(id),
+    getEmployees(),
+    getProjectRegularTasksByProjectId(id, weekStartDate)
+  ]);
   const viewer = await getCurrentViewer(employees);
 
   if (!viewer) {
@@ -61,7 +72,7 @@ export default async function ProjectDetailPage({
   const childTasks = sortChildTasks(activeProjectTasks.filter((task) => task.parent_task_id));
   const selectableSubtaskCount = projectTasks.filter((task) => task.parent_task_id).length;
   const taskTemplateTitles = buildTaskTemplateTitles(visibleTasks);
-  const notice = getNotice(query?.created, query?.schedule, query?.updated, query?.deleted, query?.project, query?.count);
+  const notice = getNotice(query?.created, query?.schedule, query?.updated, query?.deleted, query?.project, query?.count, query?.regular);
 
   return (
     <main className="page">
@@ -170,6 +181,13 @@ export default async function ProjectDetailPage({
                 </form>
               )}
             </section>
+            <ProjectRegularTaskPanel
+              employees={employeeOptions}
+              projectId={project.id}
+              regularTasks={projectRegularTasks}
+              viewerEmployeeId={viewer.employee?.id ?? null}
+              weekStartDate={weekStartDate}
+            />
             <section className="detailCreateGrid">
               <details className="panel createCollapsePanel">
                 <summary>タスクを追加</summary>
@@ -471,6 +489,76 @@ export default async function ProjectDetailPage({
   );
 }
 
+function ProjectRegularTaskPanel({
+  employees,
+  projectId,
+  regularTasks,
+  viewerEmployeeId,
+  weekStartDate
+}: {
+  employees: Employee[];
+  projectId: string;
+  regularTasks: ProjectRegularTask[];
+  viewerEmployeeId: string | null;
+  weekStartDate: string;
+}) {
+  const completedCount = regularTasks.filter((task) => task.current_week_check).length;
+
+  return (
+    <section className="panel projectRegularTaskPanel">
+      <div className="sectionHeader compactHeader">
+        <div>
+          <h2>今週の定例業務</h2>
+          <p className="mutedText">毎週繰り返す業務フローです。タスクとして消化せず、今週やった分だけチェックできます。</p>
+        </div>
+        <span className="statusPill">
+          {completedCount}/{regularTasks.length} 完了
+        </span>
+      </div>
+      <form action={createProjectRegularTask} className="projectRegularTaskForm">
+        <input type="hidden" name="project_id" value={projectId} />
+        <div className="field">
+          <label htmlFor="project-regular-title">業務名</label>
+          <input id="project-regular-title" name="title" maxLength={120} placeholder="例: 試合結果確認" required />
+        </div>
+        <div className="field">
+          <label htmlFor="project-regular-assignee">担当</label>
+          <EmployeeSelect employees={employees} id="project-regular-assignee" name="assignee_id" />
+        </div>
+        <div className="field">
+          <label htmlFor="project-regular-memo">メモ</label>
+          <input id="project-regular-memo" name="memo" maxLength={1000} placeholder="例: 毎週月曜に確認" />
+        </div>
+        <button className="button" type="submit">
+          定例業務を追加
+        </button>
+      </form>
+      <div className="projectRegularTaskList">
+        {regularTasks.length === 0 ? <div className="empty">この案件の定例業務はまだありません</div> : null}
+        {regularTasks.map((task) => (
+          <article className={task.current_week_check ? "projectRegularTaskItem isDone" : "projectRegularTaskItem"} key={task.id}>
+            <div>
+              <strong>{task.title}</strong>
+              <p>
+                {task.assignee_id ? `担当 ${getEmployeeName(employees, task.assignee_id)}` : "担当 未割当"}
+                {task.memo ? ` / ${task.memo}` : ""}
+              </p>
+            </div>
+            <ProjectRegularTaskCheck checked={Boolean(task.current_week_check)} checkedById={viewerEmployeeId} regularTaskId={task.id} weekStartDate={weekStartDate} />
+            <form action={deleteProjectRegularTask} className="deleteForm">
+              <input type="hidden" name="project_id" value={projectId} />
+              <input type="hidden" name="id" value={task.id} />
+              <button className="dangerButton" type="submit">
+                削除
+              </button>
+            </form>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function EmployeeSelect({
   defaultValue = "",
   employees,
@@ -497,7 +585,7 @@ function EmployeeSelect({
   );
 }
 
-function getNotice(created?: string, schedule?: string, updated?: string, deleted?: string, project?: string, count?: string) {
+function getNotice(created?: string, schedule?: string, updated?: string, deleted?: string, project?: string, count?: string, regular?: string) {
   if (project === "updated") {
     return { kind: "noticeSuccess", message: "案件情報を更新しました。" };
   }
@@ -550,15 +638,23 @@ function getNotice(created?: string, schedule?: string, updated?: string, delete
     return { kind: "noticeSuccess", message: `選択した小タスク${count ?? ""}件をまとめて削除しました。` };
   }
 
-  if (created === "missing-env" || schedule === "missing-env" || updated === "missing-env" || deleted === "missing-env" || project === "missing-env") {
+  if (regular === "success") {
+    return { kind: "noticeSuccess", message: "定例業務を追加しました。" };
+  }
+
+  if (regular === "deleted") {
+    return { kind: "noticeSuccess", message: "定例業務を削除しました。" };
+  }
+
+  if (created === "missing-env" || schedule === "missing-env" || updated === "missing-env" || deleted === "missing-env" || project === "missing-env" || regular === "missing-env") {
     return { kind: "noticeError", message: "Supabaseの環境変数を確認してください。" };
   }
 
-  if (created === "invalid" || schedule === "invalid" || updated === "invalid" || deleted === "invalid" || project === "invalid") {
+  if (created === "invalid" || schedule === "invalid" || updated === "invalid" || deleted === "invalid" || project === "invalid" || regular === "invalid") {
     return { kind: "noticeError", message: "入力内容を確認してください。" };
   }
 
-  if (created === "error" || schedule === "error" || updated === "error" || deleted === "error" || project === "error") {
+  if (created === "error" || schedule === "error" || updated === "error" || deleted === "error" || project === "error" || regular === "error") {
     return { kind: "noticeError", message: "処理に失敗しました。Supabase設定を確認してください。" };
   }
 
@@ -576,6 +672,10 @@ function Summary({ label, value }: { label: string; value: number }) {
 
 function buildTaskTemplateTitles(tasks: OperationTask[]) {
   return [...new Set(tasks.map((task) => task.title).filter(Boolean))].sort((a, b) => a.localeCompare(b, "ja")).slice(0, 80);
+}
+
+function getEmployeeName(employees: Employee[], id: string) {
+  return employees.find((employee) => employee.id === id)?.name ?? "未割当";
 }
 
 function sortMiddleTasks(tasks: OperationTask[]) {

@@ -165,6 +165,66 @@ export type Database = {
         };
         Relationships: [];
       };
+      project_regular_tasks: {
+        Row: {
+          id: string;
+          project_id: string;
+          assignee_id: string | null;
+          title: string;
+          memo: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          assignee_id?: string | null;
+          title: string;
+          memo?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          assignee_id?: string | null;
+          title?: string;
+          memo?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      project_regular_task_checks: {
+        Row: {
+          id: string;
+          regular_task_id: string;
+          week_start_date: string;
+          checked_by_id: string | null;
+          checked_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          regular_task_id: string;
+          week_start_date: string;
+          checked_by_id?: string | null;
+          checked_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          regular_task_id?: string;
+          week_start_date?: string;
+          checked_by_id?: string | null;
+          checked_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       calendar_events: {
         Row: {
           id: string;
