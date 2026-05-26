@@ -2227,14 +2227,24 @@ a {
 
 .todayTaskActions {
   display: grid;
-  grid-template-columns: auto minmax(220px, 1fr);
+  grid-template-columns: 1fr;
   gap: 8px;
   align-items: end;
   margin-top: 6px;
+  min-width: 0;
+}
+
+.todayTaskActions .detailLink {
+  justify-self: start;
+  min-width: 68px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .todayTaskActions .projectStatusForm {
-  grid-template-columns: minmax(150px, 1fr) auto;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
 }
 
 .todayTaskActions .projectStatusForm label {
@@ -2242,7 +2252,8 @@ a {
 }
 
 .todayStatusForm select {
-  min-width: 150px;
+  width: 100%;
+  min-width: 0;
 }
 
 .employeeTaskMeta {
@@ -2301,7 +2312,7 @@ a {
 
 .todayGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
   margin-top: 24px;
   align-items: start;
