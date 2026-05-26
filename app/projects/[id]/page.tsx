@@ -5,6 +5,7 @@ import {
   createProjectCalendarEvent,
   createProjectSubtasks,
   createProjectTask,
+  applyTournamentTaskTemplate,
   deleteProjectCalendarEvent,
   deleteProjectTask,
   restoreProject,
@@ -374,6 +375,18 @@ export default async function ProjectDetailPage({
                   </button>
                 </form>
               </details>
+              <details className="panel createCollapsePanel">
+                <summary>大会タスクを呼び出し</summary>
+                <form action={applyTournamentTaskTemplate} className="quickForm">
+                  <input type="hidden" name="project_id" value={project.id} />
+                  <p className="mutedText">
+                    大会運営で毎回使う標準の小タスクを、企画から振り返りまでまとめて追加します。すでに同じ中タスク内にあるタスクは重複登録しません。
+                  </p>
+                  <button className="button" type="submit">
+                    大会タスクを追加
+                  </button>
+                </form>
+              </details>
             </section>
             <div className="sectionHeader">
               <div>
@@ -495,6 +508,14 @@ function getNotice(created?: string, schedule?: string, updated?: string, delete
 
   if (created === "success") {
     return { kind: "noticeSuccess", message: "この案件にタスクを追加しました。" };
+  }
+
+  if (created === "template-success") {
+    return { kind: "noticeSuccess", message: `大会タスクを${count ?? ""}件追加しました。` };
+  }
+
+  if (created === "template-empty") {
+    return { kind: "noticeSuccess", message: "追加できる大会タスクはありませんでした。既に登録済みです。" };
   }
 
   if (schedule === "success") {

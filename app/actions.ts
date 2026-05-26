@@ -8,6 +8,7 @@ import { revalidateProjectViews } from "@/lib/revalidate";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { sendTeamsDueAlerts, sendTeamsTaskAssignedAlert } from "@/lib/teams-notifier";
 import { getProjects, getTasks } from "@/lib/tasks";
+import { TOURNAMENT_TASK_TEMPLATE } from "@/lib/tournament-task-template";
 import {
   CATEGORIES,
   MIDDLE_TASK_CATEGORY_MAP,
@@ -466,6 +467,133 @@ export async function createProjectSubtasks(formData: FormData) {
   revalidatePath("/today");
   revalidatePath(`/projects/${projectId}`);
   redirect(`/projects/${projectId}?created=success`);
+}
+
+export async function applyTournamentTaskTemplate(formData: FormData) {
+  const projectId = readNullableUuid(formData, "project_id");
+
+  if (!projectId) {
+    redirect("/?created=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect(`/projects/${projectId}?created=missing-env`);
+  }
+
+  const { data: middleTasks, error: middleTaskError } = await supabase
+    .from("operation_tasks")
+    .select("id,title")
+    .eq("project_id", projectId)
+    .is("parent_task_id", null);
+
+  if (middleTaskError) {
+    console.error("Failed to fetch middle tasks:", middleTaskError.message);
+    redirect(`/projects/${projectId}?created=error`);
+  }
+
+  const existingMiddleTitles = new Set((middleTasks ?? []).map((task) => task.title));
+  const missingMiddleTasks = MIDDLE_TASK_TEMPLATES.filter((title) => !existingMiddleTitles.has(title));
+
+  if (missingMiddleTasks.length > 0) {
+    const { error: insertMiddleTaskError } = await supabase.from("operation_tasks").insert(
+      missingMiddleTasks.map((title) => ({
+        project_id: projectId,
+        parent_task_id: null,
+        assignee_id: null,
+        task_level: TASK_LEVELS[0],
+        title,
+        category: MIDDLE_TASK_CATEGORY_MAP[title],
+        status: STATUSES[0],
+        priority: PRIORITIES[1],
+        owner: "未割当",
+        requested_by_id: null,
+        requested_by_name: null,
+        description: null,
+        memo: null,
+        due_date: null,
+        sort_order: MIDDLE_TASK_TEMPLATES.indexOf(title)
+      }))
+    );
+
+    if (insertMiddleTaskError) {
+      console.error("Failed to create missing middle tasks:", insertMiddleTaskError.message);
+      redirect(`/projects/${projectId}?created=error`);
+    }
+  }
+
+  const { data: refreshedMiddleTasks, error: refreshedMiddleTaskError } = await supabase
+    .from("operation_tasks")
+    .select("id,title")
+    .eq("project_id", projectId)
+    .is("parent_task_id", null);
+
+  if (refreshedMiddleTaskError) {
+    console.error("Failed to refetch middle tasks:", refreshedMiddleTaskError.message);
+    redirect(`/projects/${projectId}?created=error`);
+  }
+
+  const parentByTitle = new Map((refreshedMiddleTasks ?? []).map((task) => [task.title, task.id]));
+  const parentIds = [...parentByTitle.values()];
+
+  if (parentIds.length === 0) {
+    redirect(`/projects/${projectId}?created=error`);
+  }
+
+  const { data: existingChildren, error: existingChildrenError } = await supabase
+    .from("operation_tasks")
+    .select("parent_task_id,title")
+    .eq("project_id", projectId)
+    .in("parent_task_id", parentIds);
+
+  if (existingChildrenError) {
+    console.error("Failed to fetch existing child tasks:", existingChildrenError.message);
+    redirect(`/projects/${projectId}?created=error`);
+  }
+
+  const existingChildKeys = new Set((existingChildren ?? []).map((task) => `${task.parent_task_id}:${task.title}`));
+  const rows = TOURNAMENT_TASK_TEMPLATE.flatMap((item) => {
+    const parentTaskId = parentByTitle.get(item.parentTitle);
+
+    if (!parentTaskId || existingChildKeys.has(`${parentTaskId}:${item.title}`)) {
+      return [];
+    }
+
+    return [
+      {
+        project_id: projectId,
+        parent_task_id: parentTaskId,
+        assignee_id: null,
+        task_level: TASK_LEVELS[1],
+        title: item.title,
+        category: CATEGORIES[0],
+        status: STATUSES[0],
+        priority: PRIORITIES[1],
+        owner: "未割当",
+        requested_by_id: null,
+        requested_by_name: null,
+        description: null,
+        memo: null,
+        due_date: null
+      }
+    ];
+  });
+
+  if (rows.length === 0) {
+    revalidateProjectViews(projectId);
+    redirect(`/projects/${projectId}?created=template-empty`);
+  }
+
+  const { error } = await supabase.from("operation_tasks").insert(rows);
+
+  if (error) {
+    console.error("Failed to apply tournament task template:", error.message);
+    redirect(`/projects/${projectId}?created=error`);
+  }
+
+  revalidateProjectViews(projectId);
+  redirect(`/projects/${projectId}?created=template-success&count=${rows.length}`);
 }
 
 export async function createCalendarEvent(formData: FormData) {
