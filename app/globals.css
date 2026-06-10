@@ -1548,6 +1548,76 @@ a {
   background: rgba(10, 47, 95, 0.04);
 }
 
+.deadlineRow td:first-child {
+  border-left: 5px solid transparent;
+}
+
+.deadlineRow.tournamentKuwata td:first-child {
+  border-left-color: #f97316;
+}
+
+.deadlineRow.tournamentDream td:first-child {
+  border-left-color: #dc2626;
+}
+
+.deadlineRow.tournamentKoshien td:first-child {
+  border-left-color: #16a34a;
+}
+
+.deadlineRow.tournamentPj47 td:first-child {
+  border-left-color: #8a1538;
+}
+
+.deadlineRow.tournamentZett td:first-child {
+  border-left-color: #64748b;
+}
+
+.deadlineRow.tournamentGs td:first-child {
+  border-left-color: #2563eb;
+}
+
+.tournamentBadge {
+  display: inline-flex;
+  min-width: 86px;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.tournamentKuwata {
+  background: #f97316;
+}
+
+.tournamentDream {
+  background: #dc2626;
+}
+
+.tournamentKoshien {
+  background: #16a34a;
+}
+
+.tournamentPj47 {
+  background: #8a1538;
+}
+
+.tournamentZett {
+  background: #64748b;
+}
+
+.tournamentGs {
+  background: #2563eb;
+}
+
+.tournamentDefault {
+  background: var(--accent);
+}
+
 .deadlineDate {
   display: inline-flex;
   min-height: 26px;

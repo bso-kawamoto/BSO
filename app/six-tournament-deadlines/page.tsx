@@ -7,6 +7,8 @@ import { getEmployees } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
 
+const TOURNAMENT_OPTIONS = ["桑田杯", "ドリーム", "甲子園", "PJ47", "ZETT", "GS"] as const;
+
 export default async function SixTournamentDeadlinesPage({
   searchParams
 }: {
@@ -20,7 +22,7 @@ export default async function SixTournamentDeadlinesPage({
     redirect("/login?next=/six-tournament-deadlines");
   }
 
-  const tournaments = [...new Set(SIX_TOURNAMENT_DEADLINES.map((item) => item.tournament))].sort((a, b) => a.localeCompare(b, "ja"));
+  const tournaments = TOURNAMENT_OPTIONS.filter((name) => SIX_TOURNAMENT_DEADLINES.some((item) => normalizeTournamentName(item.tournament) === name));
   const query = params?.q?.trim() ?? "";
   const tournament = params?.tournament?.trim() ?? "";
   const filteredItems = filterDeadlineItems(SIX_TOURNAMENT_DEADLINES, query, tournament);
@@ -107,8 +109,10 @@ export default async function SixTournamentDeadlinesPage({
               </thead>
               <tbody>
                 {filteredItems.map((item, index) => (
-                  <tr key={`${item.tournament}-${item.area}-${item.prefecture}-${index}`}>
-                    <td>{item.tournament}</td>
+                  <tr className={`deadlineRow ${getTournamentToneClass(normalizeTournamentName(item.tournament))}`} key={`${item.tournament}-${item.area}-${item.prefecture}-${index}`}>
+                    <td>
+                      <TournamentBadge name={normalizeTournamentName(item.tournament)} />
+                    </td>
                     <td>{item.area}</td>
                     <td>{item.prefecture}</td>
                     <td>
@@ -146,10 +150,16 @@ function DeadlineDate({ date }: { date: string | null }) {
   return <span className={`deadlineDate ${isUpcoming(date) ? "upcomingDeadlineDate" : "pastDeadlineDate"}`}>{date}</span>;
 }
 
+function TournamentBadge({ name }: { name: string }) {
+  return <span className={`tournamentBadge ${getTournamentToneClass(name)}`}>{name}</span>;
+}
+
 function filterDeadlineItems(items: SixTournamentDeadline[], query: string, tournament: string) {
   const normalizedQuery = query.toLowerCase();
   return items.filter((item) => {
-    if (tournament && item.tournament !== tournament) {
+    const normalizedTournament = normalizeTournamentName(item.tournament);
+
+    if (tournament && normalizedTournament !== tournament) {
       return false;
     }
 
@@ -157,8 +167,28 @@ function filterDeadlineItems(items: SixTournamentDeadline[], query: string, tour
       return true;
     }
 
-    return [item.tournament, item.area, item.prefecture].some((value) => value.toLowerCase().includes(normalizedQuery));
+    return [normalizedTournament, item.tournament, item.area, item.prefecture].some((value) => value.toLowerCase().includes(normalizedQuery));
   });
+}
+
+function normalizeTournamentName(name: string) {
+  if (name.includes("桑田")) return "桑田杯";
+  if (name.includes("ドリーム")) return "ドリーム";
+  if (name.includes("甲子園")) return "甲子園";
+  if (name.includes("PJ")) return "PJ47";
+  if (name.includes("ZETT")) return "ZETT";
+  if (name.includes("GS")) return "GS";
+  return name;
+}
+
+function getTournamentToneClass(name: string) {
+  if (name === "桑田杯") return "tournamentKuwata";
+  if (name === "ドリーム") return "tournamentDream";
+  if (name === "甲子園") return "tournamentKoshien";
+  if (name === "PJ47") return "tournamentPj47";
+  if (name === "ZETT") return "tournamentZett";
+  if (name === "GS") return "tournamentGs";
+  return "tournamentDefault";
 }
 
 function isUpcoming(date: string | null) {
