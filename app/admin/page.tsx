@@ -75,6 +75,9 @@ export default async function AdminPage({
             <Link className="navItem" href="/">
               ボード
             </Link>
+            <Link className="navItem" href="/six-tournament-deadlines">
+              6大会期日
+            </Link>
             <span className="navItem navItemActive">{viewer.name}</span>
             <form action={logout}>
               <button className="navButton" type="submit">

@@ -45,6 +45,9 @@ export default async function TodayPage() {
             <Link className="navItem" href="/employees">
               社員別
             </Link>
+            <Link className="navItem" href="/six-tournament-deadlines">
+              6大会期日
+            </Link>
           </nav>
         </header>
 

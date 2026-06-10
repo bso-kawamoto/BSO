@@ -1484,6 +1484,96 @@ a {
   gap: 10px;
 }
 
+.deadlineShell {
+  max-width: 1320px;
+}
+
+.deadlineHero {
+  align-items: stretch;
+}
+
+.deadlineSummaryGrid {
+  min-width: min(520px, 100%);
+}
+
+.deadlineFilterPanel,
+.deadlineTablePanel {
+  margin-top: 18px;
+}
+
+.deadlineFilterForm {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(180px, 240px) auto auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.deadlineResetLink {
+  display: inline-grid;
+  place-items: center;
+  text-decoration: none;
+}
+
+.deadlineTableWrap {
+  overflow-x: auto;
+}
+
+.deadlineTable {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+.deadlineTable th,
+.deadlineTable td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.deadlineTable th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  color: var(--accent);
+  background: #eef6ff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.deadlineTable tbody tr:hover {
+  background: rgba(10, 47, 95, 0.04);
+}
+
+.deadlineDate {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.upcomingDeadlineDate {
+  color: #166534;
+  border-color: rgba(22, 101, 52, 0.24);
+  background: #f3fbf6;
+}
+
+.pastDeadlineDate {
+  color: var(--muted);
+  background: #f8fafc;
+}
+
+.mutedDeadlineDate {
+  color: var(--muted);
+}
+
 .detailLayout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -2360,6 +2450,7 @@ a {
   .calendarHero,
   .calendarLayout,
   .deadlineAlertList,
+  .deadlineFilterForm,
   .detailHero,
   .detailLayout,
   .detailSide,

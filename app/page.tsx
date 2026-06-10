@@ -66,6 +66,9 @@ export default async function Home({
             <Link className="navItem" href="/employees">
               社員別
             </Link>
+            <Link className="navItem" href="/six-tournament-deadlines">
+              6大会期日
+            </Link>
             {viewer.isAdmin ? (
               <Link className="navItem" href="/admin">
                 管理
