@@ -78,6 +78,9 @@ export default async function AdminPage({
             <Link className="navItem" href="/six-tournament-deadlines">
               6大会期日
             </Link>
+            <Link className="navItem" href="/admin/deadlines">
+              期日管理
+            </Link>
             <span className="navItem navItemActive">{viewer.name}</span>
             <form action={logout}>
               <button className="navButton" type="submit">

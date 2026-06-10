@@ -2,12 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logout } from "@/app/actions";
 import { getCurrentViewer } from "@/lib/auth";
-import { SIX_TOURNAMENT_DEADLINES, type SixTournamentDeadline } from "@/lib/six-tournament-deadlines";
-import { getEmployees } from "@/lib/tasks";
+import { SIX_TOURNAMENT_DEADLINES } from "@/lib/six-tournament-deadlines";
+import { buildSixTournamentDeadlineViews, getTokyoTodayDate, getTournamentToneClass, TOURNAMENT_OPTIONS } from "@/lib/six-tournament-deadline-utils";
+import { getEmployees, getSixTournamentDeadlineOverrides } from "@/lib/tasks";
 
 export const dynamic = "force-dynamic";
-
-const TOURNAMENT_OPTIONS = ["桑田杯", "ドリーム", "甲子園", "PJ47", "ZETT", "GS"] as const;
 
 export default async function SixTournamentDeadlinesPage({
   searchParams
@@ -15,19 +14,20 @@ export default async function SixTournamentDeadlinesPage({
   searchParams?: Promise<{ q?: string; tournament?: string }>;
 }) {
   const params = await searchParams;
-  const employees = await getEmployees();
+  const [employees, overrides] = await Promise.all([getEmployees(), getSixTournamentDeadlineOverrides()]);
   const viewer = await getCurrentViewer(employees);
 
   if (!viewer) {
     redirect("/login?next=/six-tournament-deadlines");
   }
 
-  const tournaments = TOURNAMENT_OPTIONS.filter((name) => SIX_TOURNAMENT_DEADLINES.some((item) => normalizeTournamentName(item.tournament) === name));
+  const allItems = buildSixTournamentDeadlineViews(SIX_TOURNAMENT_DEADLINES, overrides, { includeExpired: false });
+  const tournaments = TOURNAMENT_OPTIONS.filter((name) => allItems.some((item) => item.displayTournament === name));
   const query = params?.q?.trim() ?? "";
   const tournament = params?.tournament?.trim() ?? "";
-  const filteredItems = filterDeadlineItems(SIX_TOURNAMENT_DEADLINES, query, tournament);
-  const upcomingEntry = filteredItems.filter((item) => isUpcoming(item.entryDeadline)).length;
+  const filteredItems = filterDeadlineItems(allItems, query, tournament);
   const upcomingDraw = filteredItems.filter((item) => isUpcoming(item.drawDate)).length;
+  const thisWeekEntry = filteredItems.filter((item) => item.isThisWeekEntryDeadline).length;
 
   return (
     <main className="page">
@@ -64,7 +64,7 @@ export default async function SixTournamentDeadlinesPage({
           <div className="summaryGrid deadlineSummaryGrid" aria-label="Deadline summary">
             <Summary label="表示件数" value={filteredItems.length} />
             <Summary label="大会数" value={tournaments.length} />
-            <Summary label="今後の締切" value={upcomingEntry} />
+            <Summary label="今週締切" value={thisWeekEntry} />
             <Summary label="今後の抽選" value={upcomingDraw} />
           </div>
         </section>
@@ -109,14 +109,15 @@ export default async function SixTournamentDeadlinesPage({
               </thead>
               <tbody>
                 {filteredItems.map((item, index) => (
-                  <tr className={`deadlineRow ${getTournamentToneClass(normalizeTournamentName(item.tournament))}`} key={`${item.tournament}-${item.area}-${item.prefecture}-${index}`}>
+                  <tr className={item.isThisWeekEntryDeadline ? "thisWeekDeadlineRow" : undefined} key={`${item.tournament}-${item.area}-${item.prefecture}-${index}`}>
                     <td>
-                      <TournamentBadge name={normalizeTournamentName(item.tournament)} />
+                      <TournamentBadge name={item.displayTournament} />
                     </td>
                     <td>{item.area}</td>
                     <td>{item.prefecture}</td>
                     <td>
                       <DeadlineDate date={item.entryDeadline} />
+                      {item.isThisWeekEntryDeadline ? <span className="thisWeekDeadlineBadge">今週締切</span> : null}
                     </td>
                     <td>
                       <DeadlineDate date={item.drawDate} />
@@ -154,12 +155,10 @@ function TournamentBadge({ name }: { name: string }) {
   return <span className={`tournamentBadge ${getTournamentToneClass(name)}`}>{name}</span>;
 }
 
-function filterDeadlineItems(items: SixTournamentDeadline[], query: string, tournament: string) {
+function filterDeadlineItems(items: ReturnType<typeof buildSixTournamentDeadlineViews>, query: string, tournament: string) {
   const normalizedQuery = query.toLowerCase();
   return items.filter((item) => {
-    const normalizedTournament = normalizeTournamentName(item.tournament);
-
-    if (tournament && normalizedTournament !== tournament) {
+    if (tournament && item.displayTournament !== tournament) {
       return false;
     }
 
@@ -167,28 +166,8 @@ function filterDeadlineItems(items: SixTournamentDeadline[], query: string, tour
       return true;
     }
 
-    return [normalizedTournament, item.tournament, item.area, item.prefecture].some((value) => value.toLowerCase().includes(normalizedQuery));
+    return [item.displayTournament, item.tournament, item.area, item.prefecture].some((value) => value.toLowerCase().includes(normalizedQuery));
   });
-}
-
-function normalizeTournamentName(name: string) {
-  if (name.includes("桑田")) return "桑田杯";
-  if (name.includes("ドリーム")) return "ドリーム";
-  if (name.includes("甲子園")) return "甲子園";
-  if (name.includes("PJ")) return "PJ47";
-  if (name.includes("ZETT")) return "ZETT";
-  if (name.includes("GS")) return "GS";
-  return name;
-}
-
-function getTournamentToneClass(name: string) {
-  if (name === "桑田杯") return "tournamentKuwata";
-  if (name === "ドリーム") return "tournamentDream";
-  if (name === "甲子園") return "tournamentKoshien";
-  if (name === "PJ47") return "tournamentPj47";
-  if (name === "ZETT") return "tournamentZett";
-  if (name === "GS") return "tournamentGs";
-  return "tournamentDefault";
 }
 
 function isUpcoming(date: string | null) {
@@ -196,7 +175,5 @@ function isUpcoming(date: string | null) {
     return false;
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return new Date(`${date}T00:00:00`).getTime() >= today.getTime();
+  return date >= getTokyoTodayDate();
 }

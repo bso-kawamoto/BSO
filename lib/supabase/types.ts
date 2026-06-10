@@ -225,6 +225,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      six_tournament_deadline_overrides: {
+        Row: {
+          id: string;
+          tournament: string;
+          area: string;
+          prefecture: string;
+          entry_deadline: string | null;
+          draw_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tournament: string;
+          area: string;
+          prefecture: string;
+          entry_deadline?: string | null;
+          draw_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tournament?: string;
+          area?: string;
+          prefecture?: string;
+          entry_deadline?: string | null;
+          draw_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       calendar_events: {
         Row: {
           id: string;

@@ -95,6 +95,17 @@ export type ProjectRegularTask = {
   current_week_check?: ProjectRegularTaskCheck | null;
 };
 
+export type SixTournamentDeadlineOverride = {
+  id: string;
+  tournament: string;
+  area: string;
+  prefecture: string;
+  entry_deadline: string | null;
+  draw_date: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type OperationTask = {
   id: string;
   project_id: string | null;

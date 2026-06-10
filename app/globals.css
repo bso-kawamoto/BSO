@@ -1548,32 +1548,12 @@ a {
   background: rgba(10, 47, 95, 0.04);
 }
 
-.deadlineRow td:first-child {
-  border-left: 5px solid transparent;
+.thisWeekDeadlineRow td {
+  background: #fff7ed;
 }
 
-.deadlineRow.tournamentKuwata td:first-child {
-  border-left-color: #f97316;
-}
-
-.deadlineRow.tournamentDream td:first-child {
-  border-left-color: #dc2626;
-}
-
-.deadlineRow.tournamentKoshien td:first-child {
-  border-left-color: #16a34a;
-}
-
-.deadlineRow.tournamentPj47 td:first-child {
-  border-left-color: #8a1538;
-}
-
-.deadlineRow.tournamentZett td:first-child {
-  border-left-color: #64748b;
-}
-
-.deadlineRow.tournamentGs td:first-child {
-  border-left-color: #2563eb;
+.thisWeekDeadlineRow td:first-child {
+  box-shadow: inset 4px 0 0 #f97316;
 }
 
 .tournamentBadge {
@@ -1627,6 +1607,37 @@ a {
   border-radius: 999px;
   font-weight: 900;
   white-space: nowrap;
+}
+
+.thisWeekDeadlineBadge {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  margin-left: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #9a3412;
+  background: #ffedd5;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.deadlineOverrideRow td {
+  background: #f8fafc;
+}
+
+.deadlineAdminTable {
+  min-width: 980px;
+}
+
+.deadlineDateInput {
+  min-height: 38px;
+  width: 150px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 10px;
+  font: inherit;
 }
 
 .upcomingDeadlineDate {

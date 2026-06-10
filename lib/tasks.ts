@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { compareEmployeesByCompanyOrder } from "@/lib/employee-order";
 import { sampleCalendarEvents, sampleEmployees, sampleProjects, sampleRegularTasks, sampleTasks } from "@/lib/sample-data";
-import { CATEGORIES, type CalendarEvent, type Employee, type OperationTask, type Project, type ProjectRegularTask, type RegularTask } from "@/lib/types";
+import { CATEGORIES, type CalendarEvent, type Employee, type OperationTask, type Project, type ProjectRegularTask, type RegularTask, type SixTournamentDeadlineOverride } from "@/lib/types";
 
 export async function getCalendarEvents(): Promise<CalendarEvent[]> {
   const supabase = createClient();
@@ -292,4 +292,24 @@ export async function getProjectRegularTasksByProjectId(projectId: string, weekS
     ...task,
     current_week_check: checkByTaskId.get(task.id) ?? null
   }));
+}
+
+export async function getSixTournamentDeadlineOverrides(): Promise<SixTournamentDeadlineOverride[]> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("six_tournament_deadline_overrides")
+    .select("id,tournament,area,prefecture,entry_deadline,draw_date,created_at,updated_at")
+    .order("entry_deadline", { ascending: true, nullsFirst: false });
+
+  if (error) {
+    console.error("Failed to fetch six tournament deadline overrides:", error.message);
+    return [];
+  }
+
+  return data ?? [];
 }

@@ -9,6 +9,7 @@ import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { sendTeamsDueAlerts, sendTeamsTaskAssignedAlert } from "@/lib/teams-notifier";
 import { getProjects, getTasks } from "@/lib/tasks";
 import { TOURNAMENT_TASK_TEMPLATE } from "@/lib/tournament-task-template";
+import { TOURNAMENT_OPTIONS, normalizeTournamentName } from "@/lib/six-tournament-deadline-utils";
 import {
   CATEGORIES,
   MIDDLE_TASK_CATEGORY_MAP,
@@ -1346,6 +1347,76 @@ export async function deleteRegularTask(formData: FormData) {
   redirect("/admin?regular=deleted");
 }
 
+export async function updateSixTournamentDeadlineOverride(formData: FormData) {
+  const tournament = readDeadlineTournament(formData);
+  const area = readText(formData, "area");
+  const prefecture = readText(formData, "prefecture");
+  const entryDeadline = readDate(formData, "entry_deadline", false);
+  const drawDate = readDate(formData, "draw_date", false);
+
+  if (!tournament || !area || !prefecture) {
+    redirect("/admin/deadlines?deadline=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect("/admin/deadlines?deadline=missing-env");
+  }
+
+  const { error } = await supabase.from("six_tournament_deadline_overrides").upsert(
+    {
+      area,
+      draw_date: drawDate,
+      entry_deadline: entryDeadline,
+      prefecture,
+      tournament
+    },
+    { onConflict: "tournament,area,prefecture" }
+  );
+
+  if (error) {
+    console.error("Failed to update six tournament deadline override:", error.message);
+    redirect("/admin/deadlines?deadline=error");
+  }
+
+  revalidatePath("/six-tournament-deadlines");
+  revalidatePath("/admin/deadlines");
+  redirect("/admin/deadlines?deadline=success");
+}
+
+export async function deleteSixTournamentDeadlineOverride(formData: FormData) {
+  const tournament = readDeadlineTournament(formData);
+  const area = readText(formData, "area");
+  const prefecture = readText(formData, "prefecture");
+
+  if (!tournament || !area || !prefecture) {
+    redirect("/admin/deadlines?deadline=invalid");
+  }
+
+  const supabase = createAdminClient();
+
+  if (!supabase) {
+    redirect("/admin/deadlines?deadline=missing-env");
+  }
+
+  const { error } = await supabase
+    .from("six_tournament_deadline_overrides")
+    .delete()
+    .eq("tournament", tournament)
+    .eq("area", area)
+    .eq("prefecture", prefecture);
+
+  if (error) {
+    console.error("Failed to delete six tournament deadline override:", error.message);
+    redirect("/admin/deadlines?deadline=error");
+  }
+
+  revalidatePath("/six-tournament-deadlines");
+  revalidatePath("/admin/deadlines");
+  redirect("/admin/deadlines?deadline=deleted");
+}
+
 export async function createProjectRegularTask(formData: FormData) {
   const projectId = readNullableUuid(formData, "project_id");
   const assigneeId = readNullableUuid(formData, "assignee_id");
@@ -1481,6 +1552,17 @@ function readCategory(formData: FormData): TaskCategory | null {
   return typeof value === "string" && CATEGORIES.includes(value as TaskCategory)
     ? (value as TaskCategory)
     : null;
+}
+
+function readDeadlineTournament(formData: FormData) {
+  const value = formData.get("tournament");
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = normalizeTournamentName(value);
+  return TOURNAMENT_OPTIONS.includes(normalized as (typeof TOURNAMENT_OPTIONS)[number]) ? normalized : null;
 }
 
 function readOptionalCategory(formData: FormData, key: string): TaskCategory | null {
