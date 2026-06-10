@@ -1501,6 +1501,17 @@ a {
   margin-top: 18px;
 }
 
+.endedDeadlinePanel {
+  margin-top: 18px;
+  background: #f8fafc;
+}
+
+.endedDeadlinePanel summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 900;
+}
+
 .deadlineFilterForm {
   display: grid;
   grid-template-columns: minmax(240px, 1fr) minmax(180px, 240px) auto auto;
@@ -1629,6 +1640,14 @@ a {
 
 .deadlineAdminTable {
   min-width: 980px;
+}
+
+.endedDeadlineTable {
+  margin-top: 12px;
+}
+
+.endedDeadlineTable td {
+  color: var(--muted);
 }
 
 .deadlineDateInput {

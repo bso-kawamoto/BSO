@@ -9,6 +9,7 @@ export type SixTournamentDeadlineView = SixTournamentDeadline & {
   displayTournament: string;
   entryDeadline: string | null;
   drawDate: string | null;
+  isEnded: boolean;
   isThisWeekEntryDeadline: boolean;
   isOverridden: boolean;
 };
@@ -30,11 +31,12 @@ export function buildSixTournamentDeadlineViews(items: SixTournamentDeadline[], 
         displayTournament,
         drawDate,
         entryDeadline,
+        isEnded: Boolean(drawDate && drawDate < today),
         isOverridden: Boolean(override),
         isThisWeekEntryDeadline: Boolean(entryDeadline && entryDeadline >= weekStart && entryDeadline <= weekEnd)
       };
     })
-    .filter((item) => includeExpired || Boolean(item.entryDeadline && item.entryDeadline >= today))
+    .filter((item) => includeExpired || !item.isEnded)
     .sort((a, b) => {
       const aDate = a.entryDeadline ?? "9999-99-99";
       const bDate = b.entryDeadline ?? "9999-99-99";

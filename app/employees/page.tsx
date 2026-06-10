@@ -45,6 +45,9 @@ export default async function EmployeesPage({
             <Link className="navItem" href="/six-tournament-deadlines">
               6大会期日
             </Link>
+            <Link className="navItem" href="/admin/deadlines">
+              期日管理
+            </Link>
             <form action={logout}>
               <button className="navButton" type="submit">
                 ログアウト

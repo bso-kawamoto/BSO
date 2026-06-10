@@ -21,10 +21,6 @@ export default async function AdminDeadlinesPage({
     redirect("/login?next=/admin/deadlines");
   }
 
-  if (!viewer.isAdmin) {
-    redirect("/employees");
-  }
-
   const query = params?.q?.trim() ?? "";
   const tournament = params?.tournament?.trim() ?? "";
   const items = buildSixTournamentDeadlineViews(SIX_TOURNAMENT_DEADLINES, overrides, { includeExpired: true });
@@ -40,9 +36,15 @@ export default async function AdminDeadlinesPage({
             <span>6大会期日管理</span>
           </div>
           <nav className="nav" aria-label="Deadline admin navigation">
-            <Link className="navItem" href="/admin">
-              管理
-            </Link>
+            {viewer.isAdmin ? (
+              <Link className="navItem" href="/admin">
+                管理
+              </Link>
+            ) : (
+              <Link className="navItem" href="/">
+                ボード
+              </Link>
+            )}
             <Link className="navItem" href="/six-tournament-deadlines">
               6大会期日
             </Link>
